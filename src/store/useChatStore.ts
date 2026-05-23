@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Message, ToolCallStep } from '@/types'
+import type { Message, ToolCallStep } from '@/types'
 
 interface ChatState {
   messages: Message[];

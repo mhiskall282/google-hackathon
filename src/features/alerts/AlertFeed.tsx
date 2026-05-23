@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react'
-import { AlertCircle, ShieldCheck, ShieldAlert, VolumeX, Eye } from 'lucide-react'
+import { useEffect } from 'react'
+import { AlertCircle, ShieldCheck, ShieldAlert, Eye } from 'lucide-react'
 import { useAlertStore } from '@/store/useAlertStore'
 import { useMapStore } from '@/store/useMapStore'
 import { initialAlerts, incomingAlertsStream } from '@/services/mockData'
-import { AlertSeverity } from '@/types'
+import type { AlertSeverity } from '@/types'
 
 // Web Audio API Synthesizer sound generator
 const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {

@@ -1,4 +1,3 @@
-import React from 'react'
 import { AlertFeed } from '../alerts/AlertFeed'
 import { MapView } from '../map-view/MapView'
 import { AgentChat } from '../agent-chat/AgentChat'

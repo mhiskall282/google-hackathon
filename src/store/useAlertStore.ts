@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Alert, AlertSeverity } from '@/types'
+import type { Alert, AlertSeverity } from '@/types'
 
 interface AlertState {
   alerts: Alert[];
