@@ -12,6 +12,7 @@ interface MapState {
     roads: boolean;
     assets: boolean;
     alerts: boolean;
+    weather: boolean;
   };
   flyToFn: ((center: [number, number], zoom?: number) => void) | null;
   
@@ -21,7 +22,7 @@ interface MapState {
   setSelectedAlertId: (id: string | null) => void;
   setSelectedRoadId: (id: string | null) => void;
   setSelectedAssetId: (id: string | null) => void;
-  toggleLayer: (layer: 'shelters' | 'roads' | 'assets' | 'alerts') => void;
+  toggleLayer: (layer: 'shelters' | 'roads' | 'assets' | 'alerts' | 'weather') => void;
   setFlyToFn: (fn: (center: [number, number], zoom?: number) => void) => void;
   triggerFlyTo: (center: [number, number], zoom?: number) => void;
 }
@@ -38,6 +39,7 @@ export const useMapStore = create<MapState>((set, get) => ({
     roads: true,
     assets: true,
     alerts: true,
+    weather: true,
   },
   flyToFn: null,
 
