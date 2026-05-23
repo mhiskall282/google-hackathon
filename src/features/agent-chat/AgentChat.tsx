@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Cpu, ChevronRight, ChevronDown, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react'
 import { useChatStore } from '@/store/useChatStore'
 import { simulateChatStream } from '@/services/mockData'
-import { Message, ToolCallStep } from '@/types'
+import type { Message } from '@/types'
 
 // Simple helper to parse Markdown-like syntax (**bold**, \`code\`, and lists) into safe HTML/React
 function FormatMessageContent({ text }: { text: string }) {
@@ -65,7 +65,6 @@ export function AgentChat() {
     addReasoningStep,
     clearReasoningSteps,
     addToolCall,
-    updateToolCallStatus,
     clearToolCalls,
     resetChat
   } = useChatStore()

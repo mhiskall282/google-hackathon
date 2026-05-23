@@ -1,4 +1,4 @@
-import { Shelter, RoadSegment, AssetCache, Alert, Message } from '@/types'
+import type { Shelter, RoadSegment, AssetCache, Alert, Message, ToolCallStep } from '@/types'
 
 // Map Coordinates base for Houston, TX
 export const HOUSTON_COORDS = {
