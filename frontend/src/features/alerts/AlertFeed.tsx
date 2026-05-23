@@ -1,9 +1,11 @@
-import { useEffect } from 'react'
-import { AlertCircle, ShieldCheck, ShieldAlert, Eye } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { AlertCircle, ShieldCheck, ShieldAlert, Eye, BookOpen } from 'lucide-react'
 import { useAlertStore } from '@/store/useAlertStore'
 import { useMapStore } from '@/store/useMapStore'
 import { initialAlerts, incomingAlertsStream } from '@/services/mockData'
 import type { AlertSeverity } from '@/types'
+import { SOPManual } from '../qa/SOPManual'
+
 
 // Web Audio API Synthesizer sound generator
 const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
@@ -32,6 +34,7 @@ const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
 }
 
 export function AlertFeed() {
+  const [activeTab, setActiveTab] = useState<'alerts' | 'manual'>('alerts')
   const { 
     alerts, 
     activeFilter, 
@@ -118,104 +121,127 @@ export function AlertFeed() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden select-none">
-      {/* Title */}
-      <div className="p-4 border-b border-terminal-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-4.5 w-4.5 text-emergency-critical animate-pulse" />
-          <h2 className="text-xs font-mono font-bold tracking-widest text-slate-100 uppercase">
-            ALERTS TIMELINE
-          </h2>
-        </div>
-        <span className="text-[10px] font-mono bg-slate-900 border border-slate-700/60 px-1.5 py-0.5 rounded text-slate-400">
-          {filteredAlerts.length} Active
-        </span>
+      {/* Sidebar Tabs */}
+      <div className="flex border-b border-terminal-border bg-slate-950/20 shrink-0">
+        <button
+          type="button"
+          onClick={() => setActiveTab('alerts')}
+          className={`flex-1 py-3 px-2 flex items-center justify-center gap-1.5 border-b-2 font-mono text-[9px] font-bold tracking-wider transition-all duration-200 ${
+            activeTab === 'alerts'
+              ? 'border-emergency-critical text-slate-100 bg-slate-900/40 font-black'
+              : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-950/40'
+          }`}
+        >
+          <AlertCircle className={`h-3.5 w-3.5 ${activeTab === 'alerts' ? 'text-emergency-critical animate-pulse' : 'text-slate-500'}`} />
+          ALERTS ({filteredAlerts.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('manual')}
+          className={`flex-1 py-3 px-2 flex items-center justify-center gap-1.5 border-b-2 font-mono text-[9px] font-bold tracking-wider transition-all duration-200 ${
+            activeTab === 'manual'
+              ? 'border-emergency-info text-slate-100 bg-slate-900/40 font-black'
+              : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-950/40'
+          }`}
+        >
+          <BookOpen className={`h-3.5 w-3.5 ${activeTab === 'manual' ? 'text-emergency-info animate-pulse' : 'text-slate-500'}`} />
+          SOP MANUAL
+        </button>
       </div>
 
-      {/* Filters */}
-      <div className="p-2 bg-slate-950/60 border-b border-terminal-border flex items-center gap-1 overflow-x-auto">
-        {(['all', 'critical', 'warning', 'unverified'] as const).map((filterVal) => (
-          <button
-            key={filterVal}
-            type="button"
-            onClick={() => setFilter(filterVal)}
-            className={`text-[9px] font-mono uppercase px-2 py-1 rounded border transition-all duration-150 shrink-0 ${
-              activeFilter === filterVal
-                ? 'bg-slate-800 border-slate-600 text-slate-100'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-            }`}
-          >
-            {filterVal}
-          </button>
-        ))}
-      </div>
-
-      {/* Feed List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3.5">
-        {filteredAlerts.length === 0 ? (
-          <div className="text-center font-mono text-[10px] text-slate-500 py-10">
-            NO ACTIVE ALERTS REPORTED
-          </div>
-        ) : (
-          filteredAlerts.map((alert) => {
-            const styles = getSeverityClasses(alert.severity)
-            const isSelected = selectedAlertId === alert.id
-
-            return (
-              <div
-                key={alert.id}
-                onClick={() => handleSelectAlert(alert.id, alert.lat, alert.lng)}
-                className={`glass-panel border rounded p-3 transition-all duration-200 cursor-pointer ${styles.border} ${styles.bg} ${
-                  isSelected 
-                    ? 'ring-1 ring-emergency-info/60 border-slate-600 shadow-lg shadow-black/40 scale-[0.98]' 
-                    : 'hover:border-slate-700 hover:bg-slate-900/10'
+      {/* Conditionally Render Panel */}
+      {activeTab === 'alerts' ? (
+        <>
+          {/* Filters */}
+          <div className="p-2 bg-slate-950/60 border-b border-terminal-border flex items-center gap-1 overflow-x-auto shrink-0">
+            {(['all', 'critical', 'warning', 'unverified'] as const).map((filterVal) => (
+              <button
+                key={filterVal}
+                type="button"
+                onClick={() => setFilter(filterVal)}
+                className={`text-[9px] font-mono uppercase px-2 py-1 rounded border transition-all duration-150 shrink-0 ${
+                  activeFilter === filterVal
+                    ? 'bg-slate-800 border-slate-600 text-slate-100'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                 }`}
               >
-                {/* Card Header */}
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className={`text-[10px] font-mono font-bold tracking-wide uppercase ${styles.text}`}>
-                    {alert.severity}
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-500">
-                    {alert.timestamp}
-                  </span>
-                </div>
+                {filterVal}
+              </button>
+            ))}
+          </div>
 
-                {/* Card Title */}
-                <h3 className="text-xs font-display font-semibold text-slate-100 mb-1 leading-snug">
-                  {alert.title}
-                </h3>
-
-                {/* Card Desc */}
-                <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed mb-2.5">
-                  {alert.description}
-                </p>
-
-                {/* Card Footer badges */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {alert.verified ? (
-                      <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-ok uppercase border border-emergency-ok/30 px-1 py-0.5 rounded bg-emergency-ok/5">
-                        <ShieldCheck className="h-2.5 w-2.5" />
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-unverified uppercase border border-emergency-unverified/30 px-1 py-0.5 rounded bg-emergency-unverified/5 animate-pulse">
-                        <ShieldAlert className="h-2.5 w-2.5 animate-bounce" />
-                        Unverified
-                      </span>
-                    )}
-                  </div>
-
-                  <span className="flex items-center gap-1 text-[8px] font-mono text-slate-400 hover:text-slate-200 transition-colors">
-                    <Eye className="h-2.5 w-2.5" />
-                    Locate
-                  </span>
-                </div>
+          {/* Feed List */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3.5">
+            {filteredAlerts.length === 0 ? (
+              <div className="text-center font-mono text-[10px] text-slate-500 py-10">
+                NO ACTIVE ALERTS REPORTED
               </div>
-            )
-          })
-        )}
-      </div>
+            ) : (
+              filteredAlerts.map((alert) => {
+                const styles = getSeverityClasses(alert.severity)
+                const isSelected = selectedAlertId === alert.id
+
+                return (
+                  <div
+                    key={alert.id}
+                    onClick={() => handleSelectAlert(alert.id, alert.lat, alert.lng)}
+                    className={`glass-panel border rounded p-3 transition-all duration-200 cursor-pointer ${styles.border} ${styles.bg} ${
+                      isSelected 
+                        ? 'ring-1 ring-emergency-info/60 border-slate-600 shadow-lg shadow-black/40 scale-[0.98]' 
+                        : 'hover:border-slate-700 hover:bg-slate-900/10'
+                    }`}
+                  >
+                    {/* Card Header */}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className={`text-[10px] font-mono font-bold tracking-wide uppercase ${styles.text}`}>
+                        {alert.severity}
+                      </span>
+                      <span className="text-[9px] font-mono text-slate-500">
+                        {alert.timestamp}
+                      </span>
+                    </div>
+
+                    {/* Card Title */}
+                    <h3 className="text-xs font-display font-semibold text-slate-100 mb-1 leading-snug">
+                      {alert.title}
+                    </h3>
+
+                    {/* Card Desc */}
+                    <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed mb-2.5">
+                      {alert.description}
+                    </p>
+
+                    {/* Card Footer badges */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        {alert.verified ? (
+                          <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-ok uppercase border border-emergency-ok/30 px-1 py-0.5 rounded bg-emergency-ok/5">
+                            <ShieldCheck className="h-2.5 w-2.5" />
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-unverified uppercase border border-emergency-unverified/30 px-1 py-0.5 rounded bg-emergency-unverified/5 animate-pulse">
+                            <ShieldAlert className="h-2.5 w-2.5 animate-bounce" />
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+
+                      <span className="flex items-center gap-1 text-[8px] font-mono text-slate-400 hover:text-slate-200 transition-colors">
+                        <Eye className="h-2.5 w-2.5" />
+                        Locate
+                      </span>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </>
+      ) : (
+        <SOPManual />
+      )}
     </div>
   )
 }
+

@@ -53,6 +53,38 @@
   }
 }
 
+/* Radar Weather Band Sweep Animations */
+@keyframes radar-sweep-clockwise {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes radar-sweep-counter {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 1000;
+  }
+}
+
+.radar-band-fast {
+  animation: radar-sweep-clockwise 15s linear infinite;
+}
+
+.radar-band-medium {
+  animation: radar-sweep-counter 25s linear infinite;
+}
+
+.radar-band-slow {
+  animation: radar-sweep-clockwise 40s linear infinite;
+}
+
+
 /* Custom Tactical Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;

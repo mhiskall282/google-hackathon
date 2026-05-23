@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { BookOpen, ChevronRight, ChevronDown, MessageSquare, ShieldAlert, Cpu } from 'lucide-react'
 import { useChatStore } from '@/store/useChatStore'
 import { simulateChatStream } from '@/services/mockData'

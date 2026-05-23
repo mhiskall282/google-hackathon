@@ -367,6 +367,108 @@ export function MapView() {
             </Marker>
           )
         })}
+
+        {/* 5. Hurricane Elena Weather Radar Precipitation Bands */}
+        {visibleLayers.weather && (
+          <>
+            {/* Hurricane Eye Marker/Center */}
+            <Circle
+              center={[29.15, -94.75]} // Gulf/Galveston area
+              radius={8000} // 8km eye radius
+              pathOptions={{
+                fillColor: '#ef4444',
+                fillOpacity: 0.15,
+                color: '#ef4444',
+                weight: 2,
+                dashArray: '5, 5',
+                className: 'animate-pulse'
+              }}
+            />
+            {/* Inner intense precipitation band */}
+            <Circle
+              center={[29.15, -94.75]}
+              radius={24000} // 24km radius
+              pathOptions={{
+                fillColor: 'transparent',
+                color: '#ef4444', // Red critical storm cell
+                weight: 6,
+                opacity: 0.6,
+                dashArray: '80, 220',
+                className: 'radar-band-fast'
+              }}
+            />
+            {/* Middle precipitation bands */}
+            <Circle
+              center={[29.15, -94.75]}
+              radius={45000} // 45km radius
+              pathOptions={{
+                fillColor: 'transparent',
+                color: '#f97316', // Orange moderate rain
+                weight: 5,
+                opacity: 0.5,
+                dashArray: '120, 280',
+                className: 'radar-band-medium'
+              }}
+            />
+            <Circle
+              center={[29.15, -94.75]}
+              radius={68000} // 68km radius
+              pathOptions={{
+                fillColor: 'transparent',
+                color: '#eab308', // Yellow light rain
+                weight: 4,
+                opacity: 0.45,
+                dashArray: '180, 320',
+                className: 'radar-band-slow'
+              }}
+            />
+            {/* Outer trailing rain band sweeping over Houston */}
+            <Circle
+              center={[29.15, -94.75]}
+              radius={95000} // 95km radius - reaches Houston
+              pathOptions={{
+                fillColor: 'transparent',
+                color: '#22c55e', // Green light rain band reaching Houston
+                weight: 3.5,
+                opacity: 0.35,
+                dashArray: '250, 450',
+                className: 'radar-band-fast'
+              }}
+            />
+            
+            {/* Custom Polyline trailing rain arcs for more dynamic texture */}
+            <Polyline
+              positions={[
+                [29.35, -95.10],
+                [29.50, -95.00],
+                [29.65, -94.85],
+                [29.75, -94.60]
+              ]}
+              pathOptions={{
+                color: '#06b6d4', // Cyan high-velocity convective cell
+                weight: 4,
+                opacity: 0.5,
+                dashArray: '30, 150',
+                className: 'radar-band-medium'
+              }}
+            />
+            <Polyline
+              positions={[
+                [29.00, -95.40],
+                [29.25, -95.20],
+                [29.55, -94.95],
+                [29.80, -94.50]
+              ]}
+              pathOptions={{
+                color: '#22c55e', // Green precipitation band
+                weight: 3,
+                opacity: 0.4,
+                dashArray: '60, 200',
+                className: 'radar-band-slow'
+              }}
+            />
+          </>
+        )}
       </MapContainer>
 
       {/* Floating Layer Controls Panel inside center map (Glassmorphic) */}
@@ -375,7 +477,7 @@ export function MapView() {
           MAP OVERLAY LAYERS
         </span>
         <div className="space-y-1.5">
-          {(['shelters', 'alerts', 'roads', 'assets'] as const).map((layerKey) => (
+          {(['shelters', 'alerts', 'roads', 'assets', 'weather'] as const).map((layerKey) => (
             <label key={layerKey} className="flex items-center gap-2 text-[10px] font-mono text-slate-300 hover:text-slate-100 cursor-pointer">
               <input
                 type="checkbox"
@@ -383,7 +485,9 @@ export function MapView() {
                 onChange={() => useMapStore.getState().toggleLayer(layerKey)}
                 className="accent-emergency-info h-3 w-3 bg-slate-900 border-slate-700 rounded focus:ring-0 focus:ring-offset-0"
               />
-              <span className="capitalize">{layerKey}</span>
+              <span className="capitalize">
+                {layerKey === 'weather' ? 'Weather Radar' : layerKey}
+              </span>
             </label>
           ))}
         </div>
