@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useMapStore } from '@/store/useMapStore'
@@ -123,6 +123,7 @@ const createAssetIcon = (type: string, status: string, isSelected: boolean) => {
 }
 
 export function MapView() {
+  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite' | 'street'>('dark')
   const { 
     selectedShelterId, 
     selectedAlertId, 
@@ -176,10 +177,23 @@ export function MapView() {
       >
         <MapController />
         
-        {/* Dark Matter map tiles */}
+        {/* Dynamic map tiles selection */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          key={mapStyle}
+          attribution={
+            mapStyle === 'satellite'
+              ? '&copy; Google Maps'
+              : mapStyle === 'street'
+              ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          }
+          url={
+            mapStyle === 'satellite'
+              ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
+              : mapStyle === 'street'
+              ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+              : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          }
           maxZoom={20}
         />
 
@@ -472,7 +486,27 @@ export function MapView() {
       </MapContainer>
 
       {/* Floating Layer Controls Panel inside center map (Glassmorphic) */}
-      <div className="absolute bottom-6 right-6 z-[1000] glass-panel border rounded px-3 py-2.5 max-w-[160px] pointer-events-auto">
+      <div className="absolute bottom-6 right-6 z-[1000] glass-panel border rounded px-3 py-2.5 max-w-[170px] pointer-events-auto">
+        <span className="block text-[8px] font-mono font-bold tracking-widest text-slate-400 uppercase mb-1.5">
+          BASEMAP STYLE
+        </span>
+        <div className="flex flex-col gap-1.5 mb-3 border-b border-terminal-border/40 pb-2.5">
+          {(['dark', 'satellite', 'street'] as const).map((style) => (
+            <button
+              key={style}
+              type="button"
+              onClick={() => setMapStyle(style)}
+              className={`text-left text-[9px] font-mono uppercase px-2 py-1 rounded border transition-all duration-150 cursor-pointer ${
+                mapStyle === style
+                  ? 'bg-emergency-info/20 border-emergency-info/60 text-slate-100 font-bold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              }`}
+            >
+              {style === 'dark' ? 'Tactical Dark' : style === 'satellite' ? 'Google Satellite' : 'Standard Street'}
+            </button>
+          ))}
+        </div>
+
         <span className="block text-[8px] font-mono font-bold tracking-widest text-slate-400 uppercase mb-2">
           MAP OVERLAY LAYERS
         </span>
