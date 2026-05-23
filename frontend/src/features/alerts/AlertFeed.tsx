@@ -3,7 +3,7 @@ import { AlertCircle, ShieldCheck, ShieldAlert, Eye, BookOpen } from 'lucide-rea
 import { useAlertStore } from '@/store/useAlertStore'
 import { useMapStore } from '@/store/useMapStore'
 import { initialAlerts, incomingAlertsStream } from '@/services/mockData'
-import type { AlertSeverity } from '@/types'
+import type { AlertSeverity, Alert } from '@/types'
 import { SOPManual } from '../qa/SOPManual'
 
 
@@ -35,6 +35,8 @@ const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
 
 export function AlertFeed() {
   const [activeTab, setActiveTab] = useState<'alerts' | 'manual'>('alerts')
+  const [feedSource, setFeedSource] = useState<'houston' | 'global'>('houston')
+  
   const { 
     alerts, 
     activeFilter, 
@@ -48,13 +50,85 @@ export function AlertFeed() {
   
   const { triggerFlyTo, setSelectedAlertId: setSelectedMapAlertId } = useMapStore()
 
-  // Initialize initial alerts
+  // Load alerts depending on feedSource
   useEffect(() => {
-    setAlerts(initialAlerts)
-  }, [setAlerts])
+    if (feedSource === 'global') {
+      console.log('📡 Fetching global live disaster coordinates...');
+      // Fly to global view to see world-wide events
+      triggerFlyTo([20, 0], 2.5);
+      
+      // Fetch from Node server
+      fetch('http://localhost:4000/api/alerts/live')
+        .then((res) => {
+          if (!res.ok) throw new Error('API failed');
+          return res.json();
+        })
+        .then((data) => {
+          setAlerts(data);
+        })
+        .catch((err) => {
+          console.warn('⚠️ Server offline, fetching direct from public USGS and GDACS feeds:', err);
+          // Resilience fallback: direct fetch from USGS & GDACS APIs directly in browser
+          Promise.allSettled([
+            fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson').then((r) => r.json()),
+            fetch('https://www.gdacs.org/xml/gdacs.geojson').then((r) => r.json())
+          ]).then(([usgsResult, gdacsResult]) => {
+            const list: Alert[] = [];
+            
+            if (usgsResult.status === 'fulfilled' && usgsResult.value?.features) {
+              const mapped: Alert[] = usgsResult.value.features.slice(0, 10).map((f: any) => ({
+                id: `usgs-fallback-${f.id}`,
+                title: `USGS: M ${f.properties.mag} Earthquake`,
+                description: f.properties.place || 'Seismic event detected',
+                severity: f.properties.mag >= 6.0 ? 'critical' : f.properties.mag >= 5.0 ? 'warning' : 'info',
+                lat: f.geometry.coordinates[1],
+                lng: f.geometry.coordinates[0],
+                timestamp: new Date(f.properties.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                verified: true,
+                category: 'general'
+              }));
+              list.push(...mapped);
+            }
+            
+            if (gdacsResult.status === 'fulfilled' && gdacsResult.value?.features) {
+              const mapped: Alert[] = gdacsResult.value.features.slice(0, 10).map((f: any) => {
+                const props = f.properties;
+                const geom = f.geometry;
+                let severity: AlertSeverity = 'info';
+                if (props.alertlevel === 'red') severity = 'critical';
+                else if (props.alertlevel === 'orange') severity = 'warning';
+                
+                return {
+                  id: `gdacs-fallback-${props.eventid || Math.random()}`,
+                  title: props.eventname ? `GDACS: ${props.eventname}` : 'Global Disaster Alert',
+                  description: props.description || `Active event type: ${props.eventtype} with severity ${props.alertlevel}`,
+                  severity,
+                  lat: geom.coordinates[1],
+                  lng: geom.coordinates[0],
+                  timestamp: props.todate || 'Active Now',
+                  verified: true,
+                  category: 'general'
+                };
+              });
+              list.push(...mapped);
+            }
+            
+            setAlerts(list);
+          }).catch((fallbackErr) => {
+            console.error('❌ Failed both fallback feeds:', fallbackErr);
+          });
+        });
+    } else {
+      setAlerts(initialAlerts);
+      // Center back to Houston focus area
+      triggerFlyTo([29.7604, -95.3698], 11);
+    }
+  }, [feedSource, setAlerts, triggerFlyTo]);
 
-  // Simulate real-time alerts streaming: stream in alert-5, 6, 7 every 12 seconds
+  // Simulate real-time alerts streaming: stream in alert-5, 6, 7 every 15 seconds (Houston only)
   useEffect(() => {
+    if (feedSource !== 'houston') return;
+    
     let index = 0;
     const interval = setInterval(() => {
       if (index < incomingAlertsStream.length) {
@@ -75,7 +149,7 @@ export function AlertFeed() {
     }, 15000)
 
     return () => clearInterval(interval)
-  }, [addAlert, isAudioMuted])
+  }, [addAlert, isAudioMuted, feedSource])
 
   const filteredAlerts = alerts.filter((alert) => {
     if (activeFilter === 'all') return true;
@@ -152,6 +226,37 @@ export function AlertFeed() {
       {/* Conditionally Render Panel */}
       {activeTab === 'alerts' ? (
         <>
+          {/* Live Global Feed Toggle */}
+          <div className="p-2 bg-slate-900/40 border-b border-terminal-border flex items-center justify-between gap-1.5 shrink-0">
+            <span className="text-[8px] font-mono font-bold tracking-wider text-slate-400 uppercase">
+              FEED TARGET
+            </span>
+            <div className="flex bg-slate-950 border border-terminal-border/60 rounded overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setFeedSource('houston')}
+                className={`text-[8px] font-mono uppercase px-2 py-0.5 transition-all cursor-pointer ${
+                  feedSource === 'houston'
+                    ? 'bg-emergency-critical/20 text-emergency-critical font-bold'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Houston
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedSource('global')}
+                className={`text-[8px] font-mono uppercase px-2 py-0.5 transition-all cursor-pointer ${
+                  feedSource === 'global'
+                    ? 'bg-emergency-info/20 text-emergency-info font-bold'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Global Live
+              </button>
+            </div>
+          </div>
+
           {/* Filters */}
           <div className="p-2 bg-slate-950/60 border-b border-terminal-border flex items-center gap-1 overflow-x-auto shrink-0">
             {(['all', 'critical', 'warning', 'unverified'] as const).map((filterVal) => (

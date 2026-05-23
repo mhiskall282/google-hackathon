@@ -15,6 +15,17 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
 const app = express();
 app.use(express.json());
 
+// Enable CORS for frontend client API queries
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Initialize Supabase Client if keys are available
 const supabase = (SUPABASE_URL && SUPABASE_KEY) 
   ? createClient(SUPABASE_URL, SUPABASE_KEY) 
@@ -154,6 +165,95 @@ app.post('/api/alerts', async (req, res) => {
   activeAlerts.unshift(newAlert);
   broadcast({ type: 'ALERT_BROADCAST', payload: newAlert });
   res.status(201).json(newAlert);
+});
+
+// Helper to fetch live GDACS and USGS global feeds
+async function fetchGlobalLiveAlerts(): Promise<Alert[]> {
+  const liveAlerts: Alert[] = [];
+  
+  try {
+    console.log('📡 Fetching UN GDACS global disaster feeds...');
+    const gdacsRes = await fetch('https://www.gdacs.org/xml/gdacs.geojson');
+    if (gdacsRes.ok) {
+      const gdacsData = await gdacsRes.json() as any;
+      if (gdacsData.features) {
+        gdacsData.features.slice(0, 15).forEach((feat: any) => {
+          const props = feat.properties;
+          const geom = feat.geometry;
+          if (geom && geom.coordinates) {
+            const lng = geom.coordinates[0];
+            const lat = geom.coordinates[1];
+            
+            let severity: 'critical' | 'warning' | 'info' | 'unverified' = 'info';
+            if (props.alertlevel === 'red') severity = 'critical';
+            else if (props.alertlevel === 'orange') severity = 'warning';
+            
+            liveAlerts.push({
+              id: `gdacs-${props.eventid || Math.random()}`,
+              title: props.eventname ? `GDACS: ${props.eventname}` : 'Global Disaster Alert',
+              description: props.description || `Active event type: ${props.eventtype} with severity ${props.alertlevel}`,
+              severity,
+              lat,
+              lng,
+              timestamp: props.todate || 'Active Now',
+              verified: true,
+              category: 'general'
+            });
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.error('❌ Failed to fetch GDACS live feed:', err);
+  }
+
+  try {
+    console.log('📡 Fetching USGS global earthquake feeds...');
+    const usgsRes = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson');
+    if (usgsRes.ok) {
+      const usgsData = await usgsRes.json() as any;
+      if (usgsData.features) {
+        usgsData.features.slice(0, 15).forEach((feat: any) => {
+          const props = feat.properties;
+          const geom = feat.geometry;
+          if (geom && geom.coordinates) {
+            const lng = geom.coordinates[0];
+            const lat = geom.coordinates[1];
+            
+            let severity: 'critical' | 'warning' | 'info' | 'unverified' = 'info';
+            if (props.mag >= 6.0) severity = 'critical';
+            else if (props.mag >= 5.0) severity = 'warning';
+
+            liveAlerts.push({
+              id: `usgs-${feat.id || Math.random()}`,
+              title: `USGS: M ${props.mag} Earthquake`,
+              description: props.place || `Earthquake detected at depth: ${geom.coordinates[2]}km`,
+              severity,
+              lat,
+              lng,
+              timestamp: new Date(props.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              verified: true,
+              category: 'general'
+            });
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.error('❌ Failed to fetch USGS live feed:', err);
+  }
+
+  return liveAlerts;
+}
+
+// Endpoint to retrieve real global live alerts
+app.get('/api/alerts/live', async (req, res) => {
+  try {
+    const liveAlerts = await fetchGlobalLiveAlerts();
+    res.json(liveAlerts);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch global live data feeds', details: err.message });
+  }
 });
 
 server.listen(PORT, () => {
