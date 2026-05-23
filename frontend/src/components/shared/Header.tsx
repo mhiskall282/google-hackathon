@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Volume2, VolumeX, ShieldAlert, Radio, Activity } from 'lucide-react'
+import { Volume2, VolumeX, ShieldAlert, Radio, Activity, Sliders } from 'lucide-react'
 import { useAlertStore } from '@/store/useAlertStore'
 
-export function Header() {
+interface HeaderProps {
+  onToggleAdmin: () => void;
+  isAdminOpen: boolean;
+}
+
+export function Header({ onToggleAdmin, isAdminOpen }: HeaderProps) {
   const { isAudioMuted, toggleAudioMute, alerts } = useAlertStore()
   const [time, setTime] = useState(new Date())
 
@@ -95,6 +100,20 @@ export function Header() {
           ) : (
             <Volume2 className="h-4.5 w-4.5" />
           )}
+        </button>
+
+        {/* Admin drawer toggle */}
+        <button
+          type="button"
+          onClick={onToggleAdmin}
+          aria-label="Toggle admin settings panel"
+          className={`h-9 w-9 flex items-center justify-center rounded border transition-all duration-200 ${
+            isAdminOpen 
+              ? 'border-emergency-info/40 bg-emergency-info/5 text-emergency-info hover:bg-emergency-info/10' 
+              : 'border-terminal-border bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Sliders className="h-4.5 w-4.5" />
         </button>
       </div>
     </header>
