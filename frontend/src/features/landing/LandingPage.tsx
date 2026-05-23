@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, Radio, Activity, AlertTriangle, ShieldCheck, Cpu } from 'lucide-react'
+import { Radio, ShieldCheck, Cpu } from 'lucide-react'
 
 // Web Audio API Synthesizer Boot sound sweep
 const playBootSound = () => {

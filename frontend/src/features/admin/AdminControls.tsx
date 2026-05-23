@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { X, Play, Cpu, AlertTriangle, Plus, Sliders, MapPin } from 'lucide-react'
 import { useAlertStore } from '@/store/useAlertStore'
 import { useMapStore } from '@/store/useMapStore'
 import { incomingAlertsStream, HOUSTON_COORDS } from '@/services/mockData'
-import { AlertSeverity, Alert } from '@/types'
+import type { AlertSeverity, Alert } from '@/types'
 
 interface AdminControlsProps {
   isOpen: boolean;
