@@ -6,9 +6,7 @@ settings:
 
 importers:
 
-  .: {}
-
-  frontend:
+  .:
     dependencies:
       '@tanstack/react-query':
         specifier: ^5.62.0
