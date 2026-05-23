@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Local PostgreSQL instance (simulates Supabase Database backend)
+  postgres:
+    image: postgres:15-alpine
+    container_name: beacon-postgres-dev
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: beacon_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Automatically initialize database using schema.sql when container starts
+      - ./supabase/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  # Local MongoDB instance (simulates MongoDB Atlas telemetry cache)
+  mongodb:
+    image: mongo:6.0
+    container_name: beacon-mongodb-dev
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: devpassword
+      MONGO_INITDB_DATABASE: beacon_telemetry
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  pgdata:
+  mongodata:

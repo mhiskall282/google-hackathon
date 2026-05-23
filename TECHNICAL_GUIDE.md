@@ -1,122 +1,98 @@
 # Beacon Technical Architecture & Developer Guide
 
-Welcome to the technical architecture guide for **Beacon**—the real-time operations center dashboard for tactical disaster coordination. This guide describes the system architecture, state flow patterns, map overlays, and strict coding conventions of the project.
+Welcome to the technical architecture guide for **Beacon**—the real-time operations center dashboard for tactical disaster coordination. This guide describes the system architecture, state flow patterns, map overlays, shared workspace packages, backend server, database schemas, local infrastructure setup, and serverless Google Cloud Functions.
 
 ---
 
 ## 🗺️ Tech Stack Overview
 
-The frontend is an isolated, production-grade Vite workspace located under the [frontend/](file:///c:/Users/user/Desktop/google-hackathon/frontend) directory, leveraging:
-1. **Vite + React (v18)**: Rapid-feedback building and hot module replacement.
-2. **Leaflet & React Leaflet (v4)**: High-performance, GPU-accelerated spatial mapping using canvas overlays.
-3. **Zustand (v4)**: Lightweight, atomic state containers separating state from UI components.
-4. **Tailwind CSS (v4)**: Styled with modern color tokens (OKLCH scale) and glassmorphic tactical grids.
-5. **Web Audio API**: Browser-native sound synthesis (beeps, alarm frequencies, filters) avoiding asset loading locks.
+Beacon is built as an integrated, production-grade monorepo containing multiple workspace packages:
+1. **beacon-frontend** ([frontend/](file:///c:/Users/user/Desktop/google-hackathon/frontend)): React 18, Vite 5, Leaflet, Zustand 4, Tailwind CSS v4, and the Web Audio API.
+2. **beacon-shared** ([shared/](file:///c:/Users/user/Desktop/google-hackathon/shared)): Pure TypeScript schemas defining telemetry contracts.
+3. **beacon-backend** ([backend/](file:///c:/Users/user/Desktop/google-hackathon/backend)): Node.js, Express, WebSocket server (`ws`), and the Supabase JS SDK.
+4. **beacon-cloud-functions** ([cloud-functions/](file:///c:/Users/user/Desktop/google-hackathon/cloud-functions)): Serverless Node.js endpoints utilizing the Google Cloud Functions framework and the Gemini Pro API.
+5. **infrastructure** ([infrastructure/](file:///c:/Users/user/Desktop/google-hackathon/infrastructure)): Docker Compose database setups and Supabase schema scripts.
 
 ---
 
-## 🗄️ State Architecture & State Stores
+## 📂 Monorepo Architecture & Dependencies
 
-State in Beacon is segregated into three dedicated, single-purpose stores under [frontend/src/store/](file:///c:/Users/user/Desktop/google-hackathon/frontend/src/store/):
+Beacon manages package linkages via `pnpm` workspaces. 
 
-### 1. Map Navigation State (`useMapStore.ts`)
-Tracks camera center, zoom levels, selection states of active markers, and toggles for visible map layers.
-- **Dynamic Camera Control**: Features a `flyToFn` handler bound to the active Leaflet instance, allowing sidebars to pan/zoom the map view smoothly:
-  ```typescript
-  triggerFlyTo: (coords: [number, number], zoom?: number) => void
-  ```
-- **Visible Layers Registry**:
-  ```typescript
-  visibleLayers: {
-    shelters: boolean;
-    roads: boolean;
-    assets: boolean;
-    alerts: boolean;
-    weather: boolean;
-  }
-  ```
-
-### 2. Live Alerts Timeline State (`useAlertStore.ts`)
-Manages the real-time stream of incoming incident alerts and filters (all, critical, warning, unverified).
-- **Beep Synthesizer**: Connects to the Web Audio API to play alerts beeps when a new incident is pushed to the stream:
-  - Critical incidents: `880Hz` high tone.
-  - Warning incidents: `580Hz` double tone.
-  - Feedback click sounds: `440Hz` clean tone.
-
-### 3. AI Coordination Chat State (`useChatStore.ts`)
-Drives the AI Copilot stream logic. Manages message history, active streaming state, active reasoning logs, and tool status feedback.
-- **Thinking Thread / Reasoning Logs**: Stores lists of active thinking steps as they stream in:
-  ```typescript
-  activeReasoningSteps: string[];
-  activeToolCalls: ToolCallStep[];
-  ```
-
----
-
-## 🛰️ Leaflet Dynamic Basemaps & Overlays
-
-The spatial operations center in [MapView.tsx](file:///c:/Users/user/Desktop/google-hackathon/frontend/src/features/map-view/MapView.tsx) performs heavy graphic operations:
-
-### 1. Real Google Satellite Map Switching
-Unlike static leaflet maps, Beacon allows changing map tiles dynamically in the Floating Layers Control. Setting a React `key` equal to the active style forces the `TileLayer` to reload the grid instantly:
-```tsx
-<TileLayer
-  key={mapStyle}
-  url={
-    mapStyle === 'satellite'
-      ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Hybrid Satellite
-      : mapStyle === 'street'
-      ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' // OpenStreetMap
-      : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' // Tactical Dark Matter
-  }
-/>
+```
+/
+├── frontend/               # React + Vite application
+│   └── package.json        # References "beacon-shared": "workspace:*"
+├── backend/                # Express + WebSockets Node server
+│   └── package.json        # References "beacon-shared": "workspace:*"
+├── cloud-functions/        # GCF serverless handlers (Gemini Pro + Supabase)
+│   └── package.json        # References "beacon-shared": "workspace:*"
+├── shared/                 # Common TypeScript interface definitions
+│   └── src/index.ts        # Exports: Alert, Shelter, RoadSegment, AssetCache, Message
+├── infrastructure/         # Docker Compose & Supabase SQL migrations
+└── package.json            # Root configuration running workspaces
 ```
 
-### 2. Radial Shelter Gauges
-Shelter icons are generated as custom Leaflet `DivIcon`s that embed live SVG elements showing occupancy percentage radial gauges:
-- Green: < 80% occupancy.
-- Orange: 80% - 97% occupancy.
-- Red: >= 98% (Critical / overflow diversion required).
+---
 
-### 3. Animated Radar Precipitation Bands
-The weather overlay simulates Hurricane Elena's precipitation fields centered off the Gulf of Mexico/Galveston:
-- Sweeping bands are rendered as concentric Leaflet `<Circle>` layers styled with SVG dasharrays:
-  ```tsx
-  dashArray: '80, 220' // Creates separate storm bands
-  ```
-- **GPU-Accelerated Sweep Animations**: Dashes crawl along circle boundaries using CSS `stroke-dashoffset` keyframes defined in [index.css](file:///c:/Users/user/Desktop/google-hackathon/frontend/src/index.css):
-  ```css
-  @keyframes radar-sweep-clockwise {
-    from { stroke-dashoffset: 1000; }
-    to { stroke-dashoffset: 0; }
-  }
-  .radar-band-fast {
-    animation: radar-sweep-clockwise 15s linear infinite;
-  }
-  ```
+## 🧬 Monorepo Workspace Shared Types (`beacon-shared`)
+
+All coordinates, severities, and status schemas are exported from the single source of truth: `shared/src/index.ts`. 
+
+Frontend maps their types to [frontend/src/types/index.ts](file:///c:/Users/user/Desktop/google-hackathon/frontend/src/types/index.ts) using:
+```typescript
+export * from 'beacon-shared'
+```
+
+Any changes made to data contracts in `shared/src/index.ts` automatically propagate to both frontend compile tasks and backend server tasks upon save, with zero rebuild steps required.
 
 ---
 
-## 🛠️ TypeScript Strict Compilation Requirements
+## 📡 Backend Architecture (`beacon-backend`)
 
-To align with modern frontend best practices, all files are compiled under strict type rules.
-
-- **Verbatim Module Syntax**: Imports of types must specify `import type` to prevent bundler runtime type pollution:
-  ```typescript
-  // CORRECT:
-  import type { AlertSeverity } from '@/types'
-
-  // INCORRECT:
-  import { AlertSeverity } from '@/types'
-  ```
-- **Unused Variable Strictness**: All variables and imports must be used, or the compiler will throw `TS6133` and cancel production builds.
+The Node.js server serves HTTP REST requests and sustains real-time state broadcasts over WebSockets.
+- **WebSocket Real-Time Broadcast**: Connected frontends are synced with the current alert array on load. When new alerts are pushed via REST or WebSocket from any incident dispatcher, they are broadcasted to all connected clients.
+- **Supabase Client Integration**: The server uses `@supabase/supabase-js` to persist and retrieve disaster telemetry from the Supabase Postgres instance.
 
 ---
 
-## 💻 Windows Local Development Gotchas
+## ☁️ Serverless Google Cloud Functions (`beacon-cloud-functions`)
 
-- ** Tailwind oxide EPERM File Lock**: On Windows systems, hot module reloading might lock Tailwind oxide native binary node processes. If a global `pnpm install` throws lock errors, execute npm/pnpm inside the isolated package folder:
-  ```bash
-  cd frontend
-  pnpm install --ignore-workspace
-  ```
+Beacon features serverless Node.js handlers located in the [cloud-functions/](file:///c:/Users/user/Desktop/google-hackathon/cloud-functions) directory. They integrate **Gemini Pro** and **Supabase** database triggers.
+
+### 1. HTTP Webhook Alert Parser (`processIncomingAlert`)
+Triggered by external webhooks (such as incident dispatcher forms, citizen SMS, or automated radio logs).
+- **Gemini Pro NLP Parsing**: Receives a raw text description (`rawReport`) and invokes the Gemini Pro LLM (`gemini-pro`) using `@google/generative-ai` to parse, categorize, and approximate coordinates relative to Houston landmarks (e.g. NRG Arena, George R. Brown Center, Toyota Center).
+- **Supabase Insert**: Saves the parsed structured JSON directly to your live Supabase `alerts` table.
+- **Local Fallback**: Safely drops into Local Mock Mode if credentials are omitted.
+- **Execution Endpoint**: Runs locally on `http://localhost:8080`.
+
+### 2. Auto Shelter Monitor (`checkShelterCapacity`)
+Fires dynamically or via cron schedulers to audit active shelters in Supabase.
+- **Capacity Overflow Check**: Iterates through active shelter registries. If a shelter's occupancy exceeds the **95% capacity threshold**, the function updates the shelter status to `critical` in the database.
+- **Automated Rerouting Alert**: Inserts a high-priority, verified critical warning into the `alerts` timeline, triggering automated redirection algorithms on the map UI.
+- **Execution Endpoint**: Runs locally on `http://localhost:8081`.
+
+---
+
+## 🗄️ Database Infrastructure Setup
+
+All database components are declared in [infrastructure/](file:///c:/Users/user/Desktop/google-hackathon/infrastructure/):
+- **Supabase PostgreSQL Schema Script**: Declares enums, tables, Row-Level Security (RLS) policies, and seed rows representing active shelters, segments, and assets.
+- **Local Docker Compose**: Starts local PostgreSQL (automatically initialized with `schema.sql`) and MongoDB container databases to run local offline development environments.
+
+---
+
+## 💻 Monorepo Workspace Executable Scripts
+
+Manage compile and run processes using these commands at the root:
+
+| Command | Run Port | Action |
+| :--- | :--- | :--- |
+| `pnpm dev:frontend` | `5173` | Launch Vite Dev server for Frontend UI |
+| `pnpm dev:backend` | `4000` | Launch watch mode tsx execution for Node server |
+| `pnpm dev:functions:alert` | `8080` | Local GCF runtime for Gemini Alert Webhook |
+| `pnpm dev:functions:shelter` | `8081` | Local GCF runtime for Shelter Capacity Monitor |
+| `pnpm typecheck` | N/A | Perform recursive typescript compile check on all folders |
+| `pnpm build` | N/A | Bundle frontend assets and compile backend + GCF files |
+| `pnpm install` | N/A | Symlink workspace packages and fetch node dependencies |

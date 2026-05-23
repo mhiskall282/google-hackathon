@@ -3,9 +3,18 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "dev": "pnpm --filter beacon-frontend dev",
-    "build": "pnpm --filter beacon-frontend build",
-    "typecheck": "pnpm --filter beacon-frontend typecheck",
+    "dev:frontend": "pnpm --filter beacon-frontend dev",
+    "dev:backend": "pnpm --filter beacon-backend dev",
+    "dev:functions:alert": "pnpm --filter beacon-cloud-functions dev:alert",
+    "dev:functions:shelter": "pnpm --filter beacon-cloud-functions dev:shelter",
+    "build:frontend": "pnpm --filter beacon-frontend build",
+    "build:backend": "pnpm --filter beacon-backend build",
+    "build:functions": "pnpm --filter beacon-cloud-functions build",
+    "typecheck:frontend": "pnpm --filter beacon-frontend typecheck",
+    "typecheck:backend": "pnpm --filter beacon-backend typecheck",
+    "typecheck:functions": "pnpm --filter beacon-cloud-functions typecheck",
+    "typecheck": "pnpm --filter beacon-frontend typecheck && pnpm --filter beacon-backend typecheck && pnpm --filter beacon-cloud-functions typecheck",
+    "build": "pnpm --filter beacon-frontend build && pnpm --filter beacon-backend build && pnpm --filter beacon-cloud-functions build",
     "lint": "pnpm --filter beacon-frontend lint"
   }
 }

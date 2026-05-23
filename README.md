@@ -11,34 +11,43 @@ The project is structured as a clean multi-service monorepo using `pnpm` workspa
 ```mermaid
 graph TD
   A[Root Workspace] --> B[frontend/ - React + Vite App]
-  A --> C[backend/ - future WebSocket/REST API]
-  A --> D[infrastructure/ - future Deploy/Cloud Configs]
+  A --> C[backend/ - Express + WebSocket Server]
+  A --> D[shared/ - Common TypeScript Schemas]
+  A --> E[cloud-functions/ - Google Cloud Functions]
+  A --> F[infrastructure/ - Docker Compose & Supabase Migrations]
   
+  subgraph shared
+    D --> D1[Alert, Shelter, RoadSegment, AssetCache, Message]
+  end
+
   subgraph frontend
-    B --> E[index.html - View Shell]
-    B --> F[src/ - Source Code]
-    F --> G[components/ - Layout Shared Parts]
-    F --> H[features/ - Feature Modularization]
-    H --> H1[landing/ - Onboarding Gate]
-    H --> H2[admin/ - Config Panel]
-    H --> H3[alerts/ - Tabbed Timeline]
-    H --> H4[qa/ - SOP Accordions]
-    H --> H5[map-view/ - Leaflet Oper Map]
-    F --> I[store/ - Zustand Atomic States]
-    F --> J[services/ - Mock/Stream Simulators]
+    B --> G[index.html - View Shell]
+    B --> H[src/ - Source Code]
+    H --> H1[store/ - Zustand Atomic States]
+    H --> H2[features/ - Landing Gate, SOP Manual, Google Satellite map]
+  end
+
+  subgraph backend
+    C --> I[src/index.ts - Express HTTP + WebSocket Server]
+    C --> J[@supabase/supabase-js - Database Sync Client]
+  end
+
+  subgraph cloud-functions
+    E --> K[incoming-alert - Gemini Pro NLP Geocoder]
+    E --> L[shelter-check - Automated Overload Auditor]
   end
 ```
 
 ---
 
-## ⚡ Implemented Features (Operational Progress)
+## ⚡ Implemented Features (Monorepo Progress)
 
 ### 🧬 Cyberpunk Onboarding Landing Gate
 - **Tactical Access**: Responders are met with an authentication gate displaying active system metrics (Standby telemetry, AI linkage stats, and current Sector coordinates).
 - **Sound Synthesis**: Clicking "Initialize Command Core" triggers a terminal-style initialization log paired with a Web Audio API audio low-pass filter sweeper and confirmation chime.
 - See: [LandingPage.tsx](file:///c:/Users/user/Desktop/google-hackathon/frontend/src/features/landing/LandingPage.tsx)
 
-### 🗺️ Live Google Maps & basemaps switcher
+### 🗺️ Live Google Maps & Basemaps Switcher
 - **Google Satellite View**: The map operation panel supports toggling onto **Google Satellite Hybrid** maps, enabling responders to inspect real houses, roads, and buildings during simulations.
 - **Tactical Dark Mode**: Default style leveraging CartoDB Dark Matter tiles, ideal for neon glowing overlays.
 - **Basemap Key Reloading**: Dynamically changes React keys to reload the tile grid instantly when the basemap style changes.
@@ -58,6 +67,25 @@ graph TD
 - Slide-over control deck to trigger pre-configured incidents, customize AI stream delays, adjust coordinates, or inject custom events.
 - See: [AdminControls.tsx](file:///c:/Users/user/Desktop/google-hackathon/frontend/src/features/admin/AdminControls.tsx)
 
+### 🗂️ Shared Types Workspace (`beacon-shared`)
+- Centrally exports standard TypeScript type interfaces and schemas (such as `Alert`, `Shelter`, `RoadSegment`, `AssetCache`, and `Message`).
+- Shared directly via workspace symlinks to both the frontend and backend compilation engines.
+- See: [shared/src/index.ts](file:///c:/Users/user/Desktop/google-hackathon/shared/src/index.ts)
+
+### 📡 Express & WebSocket Server Backend (`beacon-backend`)
+- Implements a hybrid Node server starting Express endpoints and WebSockets on port `4000`.
+- Broadcasts incoming alerts to all connected dispatch monitors in real-time over WebSocket connections.
+- Persists telemetry directly to Supabase PostgreSQL when credentials are set up.
+- See: [backend/src/index.ts](file:///c:/Users/user/Desktop/google-hackathon/backend/src/index.ts)
+
+### ☁️ Serverless Google Cloud Functions (`beacon-cloud-functions`)
+- **processIncomingAlert (HTTP target)**: Uses **Gemini Pro** (`gemini-pro`) to automatically parse unstructured text field messages, geocode location references, classify severities, and insert them into Supabase. See: [incoming-alert.ts](file:///c:/Users/user/Desktop/google-hackathon/cloud-functions/src/incoming-alert.ts)
+- **checkShelterCapacity (audit target)**: Audits active shelters in Supabase. Shifts full shelters to `critical` status and publishes automated redirect warnings on the alerts timeline. See: [shelter-check.ts](file:///c:/Users/user/Desktop/google-hackathon/cloud-functions/src/shelter-check.ts)
+
+### 🐳 Database Docker Compose & Supabase Schemas
+- **Supabase Postgres Script**: A SQL file setting up all disaster coordinate tables, enums, triggers, and Row-Level Security (RLS) policies along with seed records for Houston shelters and road segments. See: [schema.sql](file:///c:/Users/user/Desktop/google-hackathon/infrastructure/supabase/schema.sql)
+- **Docker Compose Orchestrator**: Starts local PostgreSQL (automatically initialized with `schema.sql`) and MongoDB container databases to run local offline development environments. See: [docker-compose.yml](file:///c:/Users/user/Desktop/google-hackathon/infrastructure/docker-compose.yml)
+
 ---
 
 ## 🚀 Get Started Quick
@@ -65,28 +93,47 @@ graph TD
 ### 1. Installation
 Clone the repository and install packages from the root directory:
 ```bash
-# Install all workspace dependencies
+# Install all workspace dependencies and link modules
 pnpm install
 ```
 
-> [!NOTE]
-> On Windows systems, hot reloading might lock Tailwind oxide binaries. If a global `pnpm install` throws EPERM errors, navigate into the frontend package and run:
-> `cd frontend && pnpm install --ignore-workspace`
-
-### 2. Run Development Server
+### 2. Launch Local Database Containers (Optional)
+If you want to run database containers locally (simulating Supabase Postgres and MongoDB Atlas):
 ```bash
-# Start the Vite dev server for the frontend
-pnpm --filter beacon-frontend dev
+cd infrastructure
+docker compose up -d
+cd ..
 ```
 
-### 3. Verification Gates
-Verify TypeScript compilation and packaging:
-```bash
-# Run TypeScript compilation checks
-pnpm --filter beacon-frontend typecheck
+### 3. Configure Environments
+- Create `/backend/.env` copying `/backend/.env.example`.
+- Create `/cloud-functions/.env` copying `/cloud-functions/.env.example`.
+Update with your Supabase URL/API keys and Gemini API key.
 
-# Run production bundling
-pnpm --filter beacon-frontend build
+### 4. Running the Applications
+Run development servers concurrently in separate terminals:
+```bash
+# Starts the Frontend UI (port 5173)
+pnpm dev:frontend
+
+# Starts the Backend Server (port 4000)
+pnpm dev:backend
+
+# Starts the processIncomingAlert GCF Webhook runtime (port 8080)
+pnpm dev:functions:alert
+
+# Starts the checkShelterCapacity GCF Monitor runtime (port 8081)
+pnpm dev:functions:shelter
+```
+
+### 5. Running Validation Gates
+Verify TypeScript compilation and packaging across the entire monorepo:
+```bash
+# Run TypeScript typecheck on all workspaces
+pnpm typecheck
+
+# Run production compilation and bundling
+pnpm build
 ```
 
 ---
@@ -95,9 +142,7 @@ pnpm --filter beacon-frontend build
 
 If you are cloning this project to build out the next phase, here is what is required:
 
-- `[ ]` **Shared Types Package (`/shared`)**: Extract typescript interface schemas into the `/shared` workspace package to share structures between frontend and backend.
-- `[ ]` **WebSockets Service (`/backend`)**: Replace mock simulated streams under [mockData.ts](file:///c:/Users/user/Desktop/google-hackathon/frontend/src/services/mockData.ts) with active WebSockets connected to a real node/python server for live multi-responder coordination.
-- `[ ]` **Cloud Functions (`/cloud-functions`)**: Build serverless trigger webhooks to process incoming citizen calls and automatically categorize alert severities using LLM endpoints.
-- `[ ]` **Infrastructure Configuration (`/infrastructure`)**: Write Terraform/Docker Compose scripts to automate local cluster orchestration and Cloud staging deployments.
+- `[ ]` **MongoDB Atlas archiving**: Add logs streaming to save telemetry cache segments in MongoDB Atlas for command post forensic analysis.
+- `[ ]` **Deployments**: Configure Terraform scripts to deploy database tables and host the node backend in cloud container registries.
 
 For deep-dive architecture details, check out the [Technical Architecture Guide](file:///c:/Users/user/Desktop/google-hackathon/TECHNICAL_GUIDE.md).
