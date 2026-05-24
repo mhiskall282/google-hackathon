@@ -52,7 +52,7 @@ export async function processIncomingAlert(req: Request, res: Response) {
 
   try {
     // 1. Call Gemini to parse and structure the report
-    const model = ai.getGenerativeModel({ model: 'gemini-3.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `
       You are an emergency command parsing bot. Analyzes the following raw disaster field message:
       "${rawReport}"

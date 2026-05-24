@@ -14,8 +14,8 @@ console.log('📡 Initializing Gemini Generative AI client...');
 const ai = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 async function testGemini() {
-  console.log('🔍 Querying gemini-3.5-flash model...');
-  const model = ai.getGenerativeModel({ model: 'gemini-3.5-flash' });
+  console.log('🔍 Querying gemini-2.5-flash model...');
+  const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
   const response = await model.generateContent('Say: "Gemini connection is functional!" and summarize what a disaster responder needs in one short sentence.');
   
   console.log('✅ Response Received from Google Gemini:');
