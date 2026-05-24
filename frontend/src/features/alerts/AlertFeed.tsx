@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo } from 'react'
 import { AlertCircle, ShieldCheck, ShieldAlert, Eye, BookOpen } from 'lucide-react'
 import { useAlertStore } from '@/store/useAlertStore'
 import { useMapStore } from '@/store/useMapStore'
@@ -7,13 +7,24 @@ import type { AlertSeverity, Alert } from '@/types'
 import { SOPManual } from '../qa/SOPManual'
 
 
+let sharedAudioCtx: any = null;
+
 // Web Audio API Synthesizer sound generator
 const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
   if (isMuted) return;
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume();
+    }
+    
+    const ctx = sharedAudioCtx;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
@@ -32,6 +43,98 @@ const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
     // Silent fail if browser blocks autoplay
   }
 }
+
+// Visual helper for severity borders
+const getSeverityClasses = (severity: AlertSeverity) => {
+  switch (severity) {
+    case 'critical':
+      return {
+        border: 'border-l-4 border-l-emergency-critical border-terminal-border',
+        text: 'text-emergency-critical',
+        bg: 'bg-emergency-critical/5'
+      }
+    case 'warning':
+      return {
+        border: 'border-l-4 border-l-emergency-warning border-terminal-border',
+        text: 'text-emergency-warning',
+        bg: 'bg-emergency-warning/5'
+      }
+    case 'unverified':
+      return {
+        border: 'border-l-4 border-l-emergency-unverified border-terminal-border',
+        text: 'text-emergency-unverified',
+        bg: 'bg-emergency-unverified/5'
+      }
+    default:
+      return {
+        border: 'border-l-4 border-l-emergency-info border-terminal-border',
+        text: 'text-emergency-info',
+        bg: 'bg-emergency-info/5'
+      }
+  }
+}
+
+interface AlertCardProps {
+  alert: Alert;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+const AlertCard = memo(function AlertCard({ alert, isSelected, onClick }: AlertCardProps) {
+  const styles = getSeverityClasses(alert.severity)
+  return (
+    <div
+      onClick={onClick}
+      className={`glass-panel border rounded p-3 transition-all duration-200 cursor-pointer ${styles.border} ${styles.bg} ${
+        isSelected 
+          ? 'ring-1 ring-emergency-info/60 border-slate-600 shadow-lg shadow-black/40 scale-[0.98]' 
+          : 'hover:border-slate-700 hover:bg-slate-900/10'
+      }`}
+    >
+      {/* Card Header */}
+      <div className="flex items-center justify-between mb-1.5">
+        <span className={`text-[10px] font-mono font-bold tracking-wide uppercase ${styles.text}`}>
+          {alert.severity}
+        </span>
+        <span className="text-[9px] font-mono text-slate-500">
+          {alert.timestamp}
+        </span>
+      </div>
+
+      {/* Card Title */}
+      <h3 className="text-xs font-display font-semibold text-slate-100 mb-1 leading-snug">
+        {alert.title}
+      </h3>
+
+      {/* Card Desc */}
+      <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed mb-2.5">
+        {alert.description}
+      </p>
+
+      {/* Card Footer badges */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          {alert.verified ? (
+            <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-ok uppercase border border-emergency-ok/30 px-1 py-0.5 rounded bg-emergency-ok/5">
+              <ShieldCheck className="h-2.5 w-2.5" />
+              Verified
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-unverified uppercase border border-emergency-unverified/30 px-1 py-0.5 rounded bg-emergency-unverified/5 animate-pulse">
+              <ShieldAlert className="h-2.5 w-2.5 animate-bounce" />
+              Unverified
+            </span>
+          )}
+        </div>
+
+        <span className="flex items-center gap-1 text-[8px] font-mono text-slate-400 hover:text-slate-200 transition-colors">
+          <Eye className="h-2.5 w-2.5" />
+          Locate
+        </span>
+      </div>
+    </div>
+  )
+})
 
 export function AlertFeed() {
   const [activeTab, setActiveTab] = useState<'alerts' | 'manual'>('alerts')
@@ -164,36 +267,6 @@ export function AlertFeed() {
     triggerFlyTo([lat, lng], 13) // Zoom and pan map
   }
 
-  // Visual helper for severity borders
-  const getSeverityClasses = (severity: AlertSeverity) => {
-    switch (severity) {
-      case 'critical':
-        return {
-          border: 'border-l-4 border-l-emergency-critical border-terminal-border',
-          text: 'text-emergency-critical',
-          bg: 'bg-emergency-critical/5'
-        }
-      case 'warning':
-        return {
-          border: 'border-l-4 border-l-emergency-warning border-terminal-border',
-          text: 'text-emergency-warning',
-          bg: 'bg-emergency-warning/5'
-        }
-      case 'unverified':
-        return {
-          border: 'border-l-4 border-l-emergency-unverified border-terminal-border',
-          text: 'text-emergency-unverified',
-          bg: 'bg-emergency-unverified/5'
-        }
-      default:
-        return {
-          border: 'border-l-4 border-l-emergency-info border-terminal-border',
-          text: 'text-emergency-info',
-          bg: 'bg-emergency-info/5'
-        }
-    }
-  }
-
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden select-none">
       {/* Sidebar Tabs */}
@@ -284,61 +357,15 @@ export function AlertFeed() {
               </div>
             ) : (
               filteredAlerts.slice(0, 100).map((alert) => {
-                const styles = getSeverityClasses(alert.severity)
                 const isSelected = selectedAlertId === alert.id
 
                 return (
-                  <div
+                  <AlertCard
                     key={alert.id}
+                    alert={alert}
+                    isSelected={isSelected}
                     onClick={() => handleSelectAlert(alert.id, alert.lat, alert.lng)}
-                    className={`glass-panel border rounded p-3 transition-all duration-200 cursor-pointer ${styles.border} ${styles.bg} ${
-                      isSelected 
-                        ? 'ring-1 ring-emergency-info/60 border-slate-600 shadow-lg shadow-black/40 scale-[0.98]' 
-                        : 'hover:border-slate-700 hover:bg-slate-900/10'
-                    }`}
-                  >
-                    {/* Card Header */}
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className={`text-[10px] font-mono font-bold tracking-wide uppercase ${styles.text}`}>
-                        {alert.severity}
-                      </span>
-                      <span className="text-[9px] font-mono text-slate-500">
-                        {alert.timestamp}
-                      </span>
-                    </div>
-
-                    {/* Card Title */}
-                    <h3 className="text-xs font-display font-semibold text-slate-100 mb-1 leading-snug">
-                      {alert.title}
-                    </h3>
-
-                    {/* Card Desc */}
-                    <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed mb-2.5">
-                      {alert.description}
-                    </p>
-
-                    {/* Card Footer badges */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        {alert.verified ? (
-                          <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-ok uppercase border border-emergency-ok/30 px-1 py-0.5 rounded bg-emergency-ok/5">
-                            <ShieldCheck className="h-2.5 w-2.5" />
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 text-[8px] font-mono text-emergency-unverified uppercase border border-emergency-unverified/30 px-1 py-0.5 rounded bg-emergency-unverified/5 animate-pulse">
-                            <ShieldAlert className="h-2.5 w-2.5 animate-bounce" />
-                            Unverified
-                          </span>
-                        )}
-                      </div>
-
-                      <span className="flex items-center gap-1 text-[8px] font-mono text-slate-400 hover:text-slate-200 transition-colors">
-                        <Eye className="h-2.5 w-2.5" />
-                        Locate
-                      </span>
-                    </div>
-                  </div>
+                  />
                 )
               })
             )}

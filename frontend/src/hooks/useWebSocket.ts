@@ -2,13 +2,24 @@ import { useEffect, useRef } from 'react'
 import { useAlertStore } from '@/store/useAlertStore'
 import type { Alert } from '@/types'
 
+let sharedAudioCtx: any = null;
+
 // Web Audio API sound generator for incoming WebSocket alerts
 const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
   if (isMuted) return;
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume();
+    }
+    
+    const ctx = sharedAudioCtx;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
