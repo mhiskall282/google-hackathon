@@ -18,27 +18,30 @@ export function GuidedTour() {
   useEffect(() => {
     if (!isActive || !currentStep) return
 
+    // 1. Initial scroll to the target element when the step changes
+    const el = document.getElementById(currentStep.targetId)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+
+    // 2. Function to just update the rectangle bounds
     const updatePosition = () => {
-      const el = document.getElementById(currentStep.targetId)
-      if (el) {
-        // Scroll the element into view smoothly if it's not visible
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        
-        // Use a slight timeout to allow scrolling to finish before getting the bounding rect
-        setTimeout(() => {
-          const rect = el.getBoundingClientRect()
-          setTargetRect(rect)
-        }, 300)
+      const targetEl = document.getElementById(currentStep.targetId)
+      if (targetEl) {
+        setTargetRect(targetEl.getBoundingClientRect())
       } else {
         setTargetRect(null)
       }
     }
 
-    updatePosition()
+    // Wait for the smooth scroll to finish before calculating the first bounds
+    const timeoutId = setTimeout(updatePosition, 300)
+
     window.addEventListener('resize', updatePosition)
-    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('scroll', updatePosition, true) // Update mask when user scrolls
 
     return () => {
+      clearTimeout(timeoutId)
       window.removeEventListener('resize', updatePosition)
       window.removeEventListener('scroll', updatePosition, true)
     }
