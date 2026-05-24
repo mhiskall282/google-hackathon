@@ -269,7 +269,8 @@ export function MapView() {
                   fillOpacity: isSelected ? 0.08 : 0.03,
                   color: alert.severity === 'critical' ? '#ef4444' : alert.severity === 'warning' ? '#f97316' : '#eab308',
                   weight: isSelected ? 1.5 : 0.8,
-                  dashArray: isSelected ? '4,4' : undefined
+                  dashArray: isSelected ? '4,4' : undefined,
+                  interactive: false
                 }}
               />
               <Marker
@@ -396,7 +397,8 @@ export function MapView() {
                 color: '#ef4444',
                 weight: 2,
                 dashArray: '5, 5',
-                className: 'animate-pulse'
+                className: 'animate-pulse',
+                interactive: false
               }}
             />
             {/* Inner intense precipitation band */}
@@ -409,7 +411,8 @@ export function MapView() {
                 weight: 6,
                 opacity: 0.6,
                 dashArray: '80, 220',
-                className: 'radar-band-fast'
+                className: 'radar-band-fast',
+                interactive: false
               }}
             />
             {/* Middle precipitation bands */}
@@ -422,7 +425,8 @@ export function MapView() {
                 weight: 5,
                 opacity: 0.5,
                 dashArray: '120, 280',
-                className: 'radar-band-medium'
+                className: 'radar-band-medium',
+                interactive: false
               }}
             />
             <Circle
@@ -434,7 +438,8 @@ export function MapView() {
                 weight: 4,
                 opacity: 0.45,
                 dashArray: '180, 320',
-                className: 'radar-band-slow'
+                className: 'radar-band-slow',
+                interactive: false
               }}
             />
             {/* Outer trailing rain band sweeping over Houston */}
@@ -447,7 +452,8 @@ export function MapView() {
                 weight: 3.5,
                 opacity: 0.35,
                 dashArray: '250, 450',
-                className: 'radar-band-fast'
+                className: 'radar-band-fast',
+                interactive: false
               }}
             />
             
