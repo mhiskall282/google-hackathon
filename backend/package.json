@@ -11,12 +11,15 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.11.4",
     "@supabase/supabase-js": "^2.43.4",
     "beacon-shared": "workspace:*",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "mongodb": "^6.8.0",
     "pg": "^8.21.0",
-    "ws": "^8.17.0"
+    "ws": "^8.17.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

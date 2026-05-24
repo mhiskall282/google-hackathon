@@ -282,7 +282,7 @@ export function AlertFeed() {
                 NO ACTIVE ALERTS REPORTED
               </div>
             ) : (
-              filteredAlerts.map((alert) => {
+              filteredAlerts.slice(0, 100).map((alert) => {
                 const styles = getSeverityClasses(alert.severity)
                 const isSelected = selectedAlertId === alert.id
 

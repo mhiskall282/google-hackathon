@@ -81,21 +81,21 @@ alter table public.roads enable row level security;
 alter table public.assets enable row level security;
 alter table public.messages enable row level security;
 
--- 4. CREATE ANONYMOUS POLICIES FOR HACKATHON TACTICAL ACCESS (Allow Anonymous Reads/Writes)
+-- 4. CREATE SECURE POLICIES FOR SYSTEM ACCESS (Allow Public Read, Restrict Writes to Authenticated Roles)
 create policy "Allow public read access to alerts" on public.alerts for select using (true);
-create policy "Allow public write access to alerts" on public.alerts for insert with check (true);
+create policy "Restrict insert to alerts to authenticated roles" on public.alerts for insert with check (auth.role() = 'authenticated');
 
 create policy "Allow public read access to shelters" on public.shelters for select using (true);
-create policy "Allow public write access to shelters" on public.shelters for insert with check (true);
+create policy "Restrict insert to shelters to authenticated roles" on public.shelters for insert with check (auth.role() = 'authenticated');
 
 create policy "Allow public read access to roads" on public.roads for select using (true);
-create policy "Allow public write access to roads" on public.roads for insert with check (true);
+create policy "Restrict insert to roads to authenticated roles" on public.roads for insert with check (auth.role() = 'authenticated');
 
 create policy "Allow public read access to assets" on public.assets for select using (true);
-create policy "Allow public write access to assets" on public.assets for insert with check (true);
+create policy "Restrict insert to assets to authenticated roles" on public.assets for insert with check (auth.role() = 'authenticated');
 
 create policy "Allow public read access to messages" on public.messages for select using (true);
-create policy "Allow public write access to messages" on public.messages for insert with check (true);
+create policy "Restrict insert to messages to authenticated roles" on public.messages for insert with check (auth.role() = 'authenticated');
 
 -- 5. SEED DATA FOR DISASTER TELEMETRY (HOUSTON TELEMETRY)
 

@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Cpu, ChevronRight, ChevronDown, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react'
 import { useChatStore } from '@/store/useChatStore'
-import { simulateChatStream } from '@/services/mockData'
-import type { Message } from '@/types'
+import type { Message, ToolCallStep } from '@/types'
 
 // Simple helper to parse Markdown-like syntax (**bold**, \`code\`, and lists) into safe HTML/React
 function FormatMessageContent({ text }: { text: string }) {
@@ -117,37 +116,111 @@ export function AgentChat() {
     }
     addMessage(assistantMsgPlaceholder)
 
-    // 3. Trigger simulation
-    simulateChatStream(
-      text,
-      // Progress Callback (Thinking, Tools, Text chunks)
-      (chunk, reasoning, tools) => {
-        // Update stream content
-        updateLastMessageContent(chunk)
-        
-        // Sync reasoning steps
-        clearReasoningSteps()
-        reasoning.forEach((r) => addReasoningStep(r))
-        
-        // Sync tools
-        clearToolCalls()
-        tools.forEach((t) => {
-          addToolCall(t)
-        })
+    const chatHistory = messages
+      .filter((m) => m.id !== 'welcome')
+      .map((m) => ({
+        role: m.role,
+        content: m.content
+      }));
+
+    // 3. Trigger Real SSE stream fetch from backend Express server
+    fetch('http://localhost:4000/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
       },
-      // Complete Callback
-      (finalMessage) => {
-        setIsStreaming(false)
-        // Overwrite the placeholder with final structured message
+      body: JSON.stringify({
+        message: text,
+        history: chatHistory
+      })
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Failed to connect to AI Copilot API');
+        
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder('utf-8');
+        if (!reader) throw new Error('Stream reader not available');
+
+        let partialText = '';
+        let reasoningAccumulator: string[] = [];
+        let toolCallsAccumulator: ToolCallStep[] = [];
+
+        const readStream = async (): Promise<void> => {
+          const { done, value } = await reader.read();
+          if (done) {
+            setIsStreaming(false);
+            useChatStore.setState((state) => ({
+              messages: state.messages.map((m) =>
+                m.id === assistantPlaceholderId 
+                  ? { 
+                      id: assistantPlaceholderId,
+                      role: 'assistant',
+                      content: partialText,
+                      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      reasoningSteps: reasoningAccumulator,
+                      toolCalls: toolCallsAccumulator,
+                      isStreaming: false
+                    } 
+                  : m
+              )
+            }));
+            clearReasoningSteps();
+            clearToolCalls();
+            return;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.substring(6));
+                
+                if (data.type === 'REASONING') {
+                  reasoningAccumulator.push(data.payload);
+                  addReasoningStep(data.payload);
+                } else if (data.type === 'TOOL_CALL') {
+                  const call: ToolCallStep = data.payload;
+                  toolCallsAccumulator = toolCallsAccumulator.filter((t) => t.name !== call.name);
+                  toolCallsAccumulator.push(call);
+                  
+                  clearToolCalls();
+                  toolCallsAccumulator.forEach((t) => addToolCall(t));
+                } else if (data.type === 'TEXT') {
+                  partialText += data.payload;
+                  updateLastMessageContent(partialText);
+                }
+              } catch (e) {
+                // Ignore incomplete JSON chunks during streaming
+              }
+            }
+          }
+
+          await readStream();
+        };
+
+        await readStream();
+      })
+      .catch((err) => {
+        console.error('❌ Copilot error:', err);
+        setIsStreaming(false);
         useChatStore.setState((state) => ({
           messages: state.messages.map((m) =>
-            m.id === assistantPlaceholderId ? { ...finalMessage, isStreaming: false } : m
+            m.id === assistantPlaceholderId 
+              ? { 
+                  id: assistantPlaceholderId,
+                  role: 'assistant',
+                  content: `⚠️ Failed to fetch response from AI Copilot: ${err.message}`,
+                  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  isStreaming: false
+                } 
+              : m
           )
-        }))
-        clearReasoningSteps()
-        clearToolCalls()
-      }
-    )
+        }));
+        clearReasoningSteps();
+        clearToolCalls();
+      });
   }
 
   const handleSubmit = (e: React.FormEvent) => {

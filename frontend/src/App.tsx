@@ -4,6 +4,7 @@ import { Header } from '@/components/shared/Header'
 import { DashboardLayout } from '@/features/dashboard/DashboardLayout'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { AdminControls } from '@/features/admin/AdminControls'
+import { useWebSocket } from '@/hooks/useWebSocket'
 
 // Initialize TanStack Query client for API caching and polling
 const queryClient = new QueryClient({
@@ -18,6 +19,9 @@ const queryClient = new QueryClient({
 function App() {
   const [currentView, setCurrentView] = useState<'landing' | 'dashboard'>('landing')
   const [isAdminOpen, setIsAdminOpen] = useState(false)
+
+  // Activate WebSocket listener when dashboard view is active
+  useWebSocket(currentView === 'dashboard')
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -169,6 +169,7 @@ export function MapView() {
     <div className="w-full h-full relative z-10 select-none">
       {/* Map Element */}
       <MapContainer
+        preferCanvas={true}
         center={HOUSTON_COORDS.center}
         zoom={11}
         scrollWheelZoom={true}
