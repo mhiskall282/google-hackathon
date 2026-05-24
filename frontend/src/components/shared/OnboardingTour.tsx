@@ -52,6 +52,7 @@ export const OnboardingTour = memo(function OnboardingTour({ onClose }: Onboardi
   // Web Audio feedback tone
   const playPing = (freq: number) => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
       const ctx = new AudioContextClass();
@@ -68,7 +69,7 @@ export const OnboardingTour = memo(function OnboardingTour({ onClose }: Onboardi
       
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.15);
-    } catch (e) {}
+    } catch { /* ignore */ }
   }
 
   // Trigger tour automatically on first visit

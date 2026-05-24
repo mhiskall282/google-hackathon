@@ -143,7 +143,7 @@ export function AgentChat() {
         if (!reader) throw new Error('Stream reader not available');
 
         let partialText = '';
-        let reasoningAccumulator: string[] = [];
+        const reasoningAccumulator: string[] = [];
         let toolCallsAccumulator: ToolCallStep[] = [];
 
         const readStream = async (): Promise<void> => {
@@ -192,7 +192,7 @@ export function AgentChat() {
                   partialText += data.payload;
                   updateLastMessageContent(partialText);
                 }
-              } catch (e) {
+              } catch {
                 // Ignore incomplete JSON chunks during streaming
               }
             }

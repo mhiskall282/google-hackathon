@@ -2,12 +2,14 @@ import { useEffect, useRef } from 'react'
 import { useAlertStore } from '@/store/useAlertStore'
 import type { Alert } from '@/types'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let sharedAudioCtx: any = null;
 
 // Web Audio API sound generator for incoming WebSocket alerts
 const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
   if (isMuted) return;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     
@@ -34,7 +36,7 @@ const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
     
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + duration);
-  } catch (error) {
+  } catch {
     // Ignore browser autoplay blocks
   }
 }

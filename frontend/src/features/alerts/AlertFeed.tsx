@@ -7,12 +7,14 @@ import type { AlertSeverity, Alert } from '@/types'
 import { SOPManual } from '../qa/SOPManual'
 
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let sharedAudioCtx: any = null;
 
 // Web Audio API Synthesizer sound generator
 const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
   if (isMuted) return;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     
@@ -39,7 +41,7 @@ const triggerBeepNode = (freq: number, duration: number, isMuted: boolean) => {
     
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + duration);
-  } catch (error) {
+  } catch {
     // Silent fail if browser blocks autoplay
   }
 }
@@ -180,6 +182,7 @@ export function AlertFeed() {
             const list: Alert[] = [];
             
             if (usgsResult.status === 'fulfilled' && usgsResult.value?.features) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const mapped: Alert[] = usgsResult.value.features.slice(0, 10).map((f: any) => ({
                 id: `usgs-fallback-${f.id}`,
                 title: `USGS: M ${f.properties.mag} Earthquake`,
@@ -195,6 +198,7 @@ export function AlertFeed() {
             }
             
             if (gdacsResult.status === 'fulfilled' && gdacsResult.value?.features) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const mapped: Alert[] = gdacsResult.value.features.slice(0, 10).map((f: any) => {
                 const props = f.properties;
                 const geom = f.geometry;

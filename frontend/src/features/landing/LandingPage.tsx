@@ -13,6 +13,7 @@ import {
 // Web Audio API Synthesizer Boot sound sweep
 const playBootSound = () => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
@@ -57,10 +58,10 @@ const playBootSound = () => {
         
         pingOsc.start(pingCtx.currentTime);
         pingOsc.stop(pingCtx.currentTime + 0.6);
-      } catch (err) {}
+      } catch { /* ignore */ }
     }, 1500);
 
-  } catch (e) {
+  } catch {
     // Audio blocked
   }
 }
@@ -102,6 +103,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
       setLiveLogIndex((prev) => (prev + 1) % liveFeedsMock.length)
     }, 3000)
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePlaygroundTab])
 
   const handleBoot = () => {
