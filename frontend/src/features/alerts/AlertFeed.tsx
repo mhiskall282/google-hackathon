@@ -1,4 +1,4 @@
-import { useEffect, useState, memo } from 'react'
+import { useEffect, useState, memo, startTransition } from 'react'
 import { AlertCircle, ShieldCheck, ShieldAlert, Eye, BookOpen } from 'lucide-react'
 import { useAlertStore } from '@/store/useAlertStore'
 import { useMapStore } from '@/store/useMapStore'
@@ -265,10 +265,12 @@ export function AlertFeed() {
   })
 
   const handleSelectAlert = (alertId: string, lat: number, lng: number) => {
-    setSelectedAlertId(alertId)
-    setSelectedMapAlertId(alertId)
     triggerBeepNode(440, 0.1, isAudioMuted) // Feedback click sound
-    triggerFlyTo([lat, lng], 13) // Zoom and pan map
+    startTransition(() => {
+      setSelectedAlertId(alertId)
+      setSelectedMapAlertId(alertId)
+      triggerFlyTo([lat, lng], 13) // Zoom and pan map
+    })
   }
 
   return (

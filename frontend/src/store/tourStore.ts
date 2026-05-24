@@ -5,7 +5,7 @@ export interface TourStep {
   targetId: string
   title: string
   description: string
-  position?: 'top' | 'bottom' | 'left' | 'right'
+  position?: 'top' | 'bottom' | 'left' | 'right' | 'center'
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -19,7 +19,7 @@ export const TOUR_STEPS: TourStep[] = [
     targetId: 'tour-map',
     title: 'Operational Map',
     description: 'Visualize all active nodes and incidents geographically. Click on map markers for detailed diagnostics.',
-    position: 'bottom'
+    position: 'center'
   },
   {
     targetId: 'tour-chat',

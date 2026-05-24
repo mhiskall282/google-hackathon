@@ -57,6 +57,8 @@ export function GuidedTour() {
         return { top: targetRect.top + targetRect.height / 2, left: targetRect.left - padding, transform: 'translate(-100%, -50%)' }
       case 'right':
         return { top: targetRect.top + targetRect.height / 2, left: targetRect.right + padding, transform: 'translateY(-50%)' }
+      case 'center':
+        return { top: targetRect.top + targetRect.height / 2, left: targetRect.left + targetRect.width / 2, transform: 'translate(-50%, -50%)' }
       default:
         return { top: targetRect.bottom + padding, left: targetRect.left + targetRect.width / 2, transform: 'translateX(-50%)' }
     }

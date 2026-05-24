@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, startTransition } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useMapStore } from '@/store/useMapStore'
@@ -138,18 +138,21 @@ export function MapView() {
 
   const { alerts, selectedAlertId: activeAlertStoreId } = useAlertStore()
 
-  // Track map selection synchronizer (zoom into selected item)
   const handleSelectShelter = (id: string, lat: number, lng: number) => {
-    setSelectedShelterId(id)
-    // Zoom in slightly
-    const flyToFn = useMapStore.getState().flyToFn
-    if (flyToFn) flyToFn([lat, lng], 13)
+    startTransition(() => {
+      setSelectedShelterId(id)
+      // Zoom in slightly
+      const flyToFn = useMapStore.getState().flyToFn
+      if (flyToFn) flyToFn([lat, lng], 13)
+    })
   }
 
   const handleSelectAsset = (id: string, lat: number, lng: number) => {
-    setSelectedAssetId(id)
-    const flyToFn = useMapStore.getState().flyToFn
-    if (flyToFn) flyToFn([lat, lng], 13)
+    startTransition(() => {
+      setSelectedAssetId(id)
+      const flyToFn = useMapStore.getState().flyToFn
+      if (flyToFn) flyToFn([lat, lng], 13)
+    })
   }
 
   // Get color for road states
@@ -278,9 +281,11 @@ export function MapView() {
                 icon={createAlertIcon(alert.severity, isSelected)}
                 eventHandlers={{
                   click: () => {
-                    setSelectedAlertId(alert.id)
-                    const flyToFn = useMapStore.getState().flyToFn
-                    if (flyToFn) flyToFn([alert.lat, alert.lng], 13)
+                    startTransition(() => {
+                      setSelectedAlertId(alert.id)
+                      const flyToFn = useMapStore.getState().flyToFn
+                      if (flyToFn) flyToFn([alert.lat, alert.lng], 13)
+                    })
                   }
                 }}
               >
@@ -321,7 +326,7 @@ export function MapView() {
                 dashArray: road.status === 'blocked' ? '6,6' : road.status === 'unverified' ? '4,10' : undefined
               }}
               eventHandlers={{
-                click: () => setSelectedRoadId(road.id)
+                click: () => startTransition(() => setSelectedRoadId(road.id))
               }}
             >
               <Popup>

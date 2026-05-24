@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from 'react'
+import { useState, useRef, useEffect, memo, startTransition } from 'react'
 import { Send, Bot, User, Cpu, ChevronRight, ChevronDown, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react'
 import { useChatStore } from '@/store/useChatStore'
 import type { Message, ToolCallStep } from '@/types'
@@ -52,6 +52,106 @@ function parseFormat(content: string) {
   });
 }
 
+const ChatMessageItem = memo(function ChatMessageItem({ msg }: { msg: Message }) {
+  const [showReasoning, setShowReasoning] = useState(false)
+  const toggleReasoning = () => {
+    startTransition(() => setShowReasoning(!showReasoning))
+  }
+  
+  const isAssistant = msg.role === 'assistant'
+  const isSystem = msg.role === 'system'
+  
+  if (isSystem) {
+    return (
+      <div className="p-3 rounded border border-terminal-border bg-slate-950/50 flex gap-2">
+        <Cpu className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <FormatMessageContent text={msg.content} />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`flex gap-3 max-w-[88%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
+      {/* Avatar Icon */}
+      <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 border ${
+        msg.role === 'user'
+          ? 'bg-slate-900 border-slate-700 text-slate-300'
+          : 'bg-emergency-info/10 border-emergency-info/40 text-emergency-info'
+      }`}>
+        {msg.role === 'user' ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+      </div>
+
+      {/* Chat bubble body */}
+      <div className="space-y-1">
+        <div className={`rounded-lg p-3 glass-panel ${
+          msg.role === 'user'
+            ? 'bg-slate-900/60 border-slate-700/60'
+            : 'bg-terminal-dark/50'
+        }`}>
+          <FormatMessageContent text={msg.content} />
+          
+          {/* Dynamic Typing blinking cursor */}
+          {msg.isStreaming && msg.content === '' && (
+            <div className="flex items-center gap-1 py-1">
+              <span className="h-1.5 w-1.5 bg-emergency-info rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-1.5 w-1.5 bg-emergency-info rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-1.5 w-1.5 bg-emergency-info rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          )}
+        </div>
+
+        {/* Show completed reasoning processes */}
+        {isAssistant && msg.reasoningSteps && msg.reasoningSteps.length > 0 && (
+          <div className="border border-terminal-border/60 rounded bg-slate-950/40 mt-1.5 overflow-hidden">
+            <button
+              type="button"
+              onClick={toggleReasoning}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 text-[9px] font-mono text-slate-400 hover:text-slate-200 transition-colors uppercase bg-slate-950/60"
+            >
+              <span>Reasoning Process</span>
+              {showReasoning ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            </button>
+            {showReasoning && (
+              <div className="p-2.5 space-y-1 border-t border-terminal-border/40 font-mono text-[9px] text-slate-400 bg-slate-950/80">
+                {msg.reasoningSteps.map((step, idx) => (
+                  <div key={idx} className="flex gap-1.5">
+                    <span className="text-emergency-info font-bold">&gt;</span>
+                    <p className="leading-snug">{step}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Show tool calls */}
+        {isAssistant && msg.toolCalls && msg.toolCalls.length > 0 && (
+          <div className="space-y-1 mt-1.5">
+            {msg.toolCalls.map((tool) => (
+              <div key={tool.id} className="flex items-center justify-between border border-terminal-border/80 px-2 py-1 rounded bg-slate-950/60 text-[9px] font-mono">
+                <div className="flex items-center gap-1.5 text-slate-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emergency-ok" />
+                  <span>tool::{tool.name}</span>
+                </div>
+                <span className="text-[8px] border border-emergency-ok/40 text-emergency-ok px-1 py-0.2 rounded bg-emergency-ok/5">
+                  OK
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Meta details time */}
+        <div className="text-[8px] font-mono text-slate-500 text-right px-1 pt-0.5">
+          {msg.timestamp}
+        </div>
+      </div>
+    </div>
+  )
+})
+
 export function AgentChat() {
   const {
     messages,
@@ -69,7 +169,6 @@ export function AgentChat() {
   } = useChatStore()
 
   const [input, setInput] = useState('')
-  const [showReasoningMap, setShowReasoningMap] = useState<Record<string, boolean>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Auto-scroll to bottom of conversation
@@ -233,13 +332,6 @@ export function AgentChat() {
     triggerChatResponse(topic)
   }
 
-  const toggleReasoning = (msgId: string) => {
-    setShowReasoningMap((prev) => ({
-      ...prev,
-      [msgId]: !prev[msgId]
-    }))
-  }
-
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden select-none">
       {/* Title */}
@@ -262,103 +354,9 @@ export function AgentChat() {
 
       {/* Messages Feed */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => {
-          const isAssistant = msg.role === 'assistant'
-          const isSystem = msg.role === 'system'
-          
-          if (isSystem) {
-            return (
-              <div key={msg.id} className="p-3 rounded border border-terminal-border bg-slate-950/50 flex gap-2">
-                <Cpu className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <FormatMessageContent text={msg.content} />
-                </div>
-              </div>
-            )
-          }
-
-          return (
-            <div
-              key={msg.id}
-              className={`flex gap-3 max-w-[88%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
-            >
-              {/* Avatar Icon */}
-              <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 border ${
-                msg.role === 'user'
-                  ? 'bg-slate-900 border-slate-700 text-slate-300'
-                  : 'bg-emergency-info/10 border-emergency-info/40 text-emergency-info'
-              }`}>
-                {msg.role === 'user' ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
-              </div>
-
-              {/* Chat bubble body */}
-              <div className="space-y-1">
-                <div className={`rounded-lg p-3 glass-panel ${
-                  msg.role === 'user'
-                    ? 'bg-slate-900/60 border-slate-700/60'
-                    : 'bg-terminal-dark/50'
-                }`}>
-                  <FormatMessageContent text={msg.content} />
-                  
-                  {/* Dynamic Typing blinking cursor */}
-                  {msg.isStreaming && msg.content === '' && (
-                    <div className="flex items-center gap-1 py-1">
-                      <span className="h-1.5 w-1.5 bg-emergency-info rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="h-1.5 w-1.5 bg-emergency-info rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="h-1.5 w-1.5 bg-emergency-info rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Show completed reasoning processes */}
-                {isAssistant && msg.reasoningSteps && msg.reasoningSteps.length > 0 && (
-                  <div className="border border-terminal-border/60 rounded bg-slate-950/40 mt-1.5 overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => toggleReasoning(msg.id)}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 text-[9px] font-mono text-slate-400 hover:text-slate-200 transition-colors uppercase bg-slate-950/60"
-                    >
-                      <span>Reasoning Process</span>
-                      {showReasoningMap[msg.id] ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    </button>
-                    {showReasoningMap[msg.id] && (
-                      <div className="p-2.5 space-y-1 border-t border-terminal-border/40 font-mono text-[9px] text-slate-400 bg-slate-950/80">
-                        {msg.reasoningSteps.map((step, idx) => (
-                          <div key={idx} className="flex gap-1.5">
-                            <span className="text-emergency-info font-bold">&gt;</span>
-                            <p className="leading-snug">{step}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Show tool calls */}
-                {isAssistant && msg.toolCalls && msg.toolCalls.length > 0 && (
-                  <div className="space-y-1 mt-1.5">
-                    {msg.toolCalls.map((tool) => (
-                      <div key={tool.id} className="flex items-center justify-between border border-terminal-border/80 px-2 py-1 rounded bg-slate-950/60 text-[9px] font-mono">
-                        <div className="flex items-center gap-1.5 text-slate-300">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emergency-ok" />
-                          <span>tool::{tool.name}</span>
-                        </div>
-                        <span className="text-[8px] border border-emergency-ok/40 text-emergency-ok px-1 py-0.2 rounded bg-emergency-ok/5">
-                          OK
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Meta details time */}
-                <div className="text-[8px] font-mono text-slate-500 text-right px-1 pt-0.5">
-                  {msg.timestamp}
-                </div>
-              </div>
-            </div>
-          )
-        })}
+        {messages.map((msg) => (
+          <ChatMessageItem key={msg.id} msg={msg} />
+        ))}
 
         {/* Live Active Streaming Telemetry (when agent is currently executing reasoning steps) */}
         {isStreaming && (activeReasoningSteps.length > 0 || activeToolCalls.length > 0) && (
