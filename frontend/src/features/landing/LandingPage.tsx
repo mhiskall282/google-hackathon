@@ -137,7 +137,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
   }
 
   return (
-    <div className="relative w-screen h-screen overflow-y-auto bg-mongodb-dark text-mongodb-text font-sans scroll-smooth">
+    <div className="relative w-full h-screen overflow-y-auto bg-mongodb-dark text-mongodb-text font-sans scroll-smooth">
       {/* Background radial highlights in MongoDB green and slate */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-mongodb-green/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-mongodb-slate/15 rounded-full blur-[160px] pointer-events-none" />
@@ -534,40 +534,42 @@ export function LandingPage({ onEnter }: LandingPageProps) {
             </footer>
           </motion.div>
         ) : (
-          <motion.div
-            key="booting-loader"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="z-10 w-full max-w-lg px-8 py-6 rounded border border-mongodb-border bg-mongodb-card/90 font-mono text-[10px] text-mongodb-green space-y-2 select-none shadow-2xl"
-          >
-            {/* Terminal Top */}
-            <div className="flex items-center gap-1.5 pb-3 border-b border-slate-900 mb-3">
-              <span className="h-2 w-2 rounded-full bg-slate-800"></span>
-              <span className="h-2 w-2 rounded-full bg-slate-800"></span>
-              <span className="h-2 w-2 rounded-full bg-slate-800"></span>
-              <span className="text-[9px] text-slate-500 ml-2">beacon_bootloader.log</span>
-            </div>
+          <div className="fixed inset-0 w-full h-screen flex items-center justify-center bg-mongodb-dark/95 z-50">
+            <motion.div
+              key="booting-loader"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-lg px-8 py-6 rounded border border-mongodb-border bg-mongodb-card/90 font-mono text-[10px] text-mongodb-green space-y-2 select-none shadow-2xl"
+            >
+              {/* Terminal Top */}
+              <div className="flex items-center gap-1.5 pb-3 border-b border-slate-900 mb-3">
+                <span className="h-2 w-2 rounded-full bg-slate-800"></span>
+                <span className="h-2 w-2 rounded-full bg-slate-800"></span>
+                <span className="h-2 w-2 rounded-full bg-slate-800"></span>
+                <span className="text-[9px] text-slate-500 ml-2">beacon_bootloader.log</span>
+              </div>
 
-            {/* Dynamic Logs Printing */}
-            <div className="space-y-1.5 min-h-[200px]">
-              {bootProgress.map((log, index) => (
-                <div key={index} className="flex gap-2">
-                  <span className="text-mongodb-green font-bold">[ OK ]</span>
-                  <p className="text-slate-300 leading-snug">{log}</p>
-                </div>
-              ))}
-              
-              {/* Blinking cursor */}
-              {bootProgress.length < bootLogs.length && (
-                <div className="flex gap-2">
-                  <span className="text-mongodb-green font-bold">&gt;</span>
-                  <span className="inline-block w-1.5 h-3.5 bg-mongodb-green animate-pulse" />
-                </div>
-              )}
-            </div>
-          </motion.div>
+              {/* Dynamic Logs Printing */}
+              <div className="space-y-1.5 min-h-[200px]">
+                {bootProgress.map((log, index) => (
+                  <div key={index} className="flex gap-2">
+                    <span className="text-mongodb-green font-bold">[ OK ]</span>
+                    <p className="text-slate-300 leading-snug">{log}</p>
+                  </div>
+                ))}
+                
+                {/* Blinking cursor */}
+                {bootProgress.length < bootLogs.length && (
+                  <div className="flex gap-2">
+                    <span className="text-mongodb-green font-bold">&gt;</span>
+                    <span className="inline-block w-1.5 h-3.5 bg-mongodb-green animate-pulse" />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
