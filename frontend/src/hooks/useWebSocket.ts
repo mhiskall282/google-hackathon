@@ -44,7 +44,8 @@ export function useWebSocket(active: boolean) {
 
     const connect = () => {
       console.log('🔌 Connecting to WebSocket broadcast grid...');
-      const socket = new WebSocket('ws://localhost:4000');
+      const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4000';
+      const socket = new WebSocket(WS_URL);
       socketRef.current = socket;
 
       socket.onopen = () => {

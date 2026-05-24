@@ -58,7 +58,8 @@ export function AlertFeed() {
       triggerFlyTo([20, 0], 2.5);
       
       // Fetch from Node server
-      fetch('http://localhost:4000/api/alerts/live')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      fetch(`${API_URL}/api/alerts/live`)
         .then((res) => {
           if (!res.ok) throw new Error('API failed');
           return res.json();

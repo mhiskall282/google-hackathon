@@ -124,7 +124,8 @@ export function AgentChat() {
       }));
 
     // 3. Trigger Real SSE stream fetch from backend Express server
-    fetch('http://localhost:4000/api/chat', {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    fetch(`${API_URL}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
