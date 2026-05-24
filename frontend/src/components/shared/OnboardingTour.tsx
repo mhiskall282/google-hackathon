@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, memo } from 'react'
-import { HelpCircle, ChevronRight, ChevronLeft, X, Play } from 'lucide-react'
+import { useState, useEffect, memo } from 'react'
+import { HelpCircle, ChevronRight, ChevronLeft, X } from 'lucide-react'
 
 interface TourStep {
   title: string;
