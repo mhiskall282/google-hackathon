@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import { Send, Bot, User, Cpu, ChevronRight, ChevronDown, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react'
 import { useChatStore } from '@/store/useChatStore'
 import type { Message, ToolCallStep } from '@/types'
 
-// Simple helper to parse Markdown-like syntax (**bold**, \`code\`, and lists) into safe HTML/React
-function FormatMessageContent({ text }: { text: string }) {
+// Simple helper to parse Markdown-like syntax (**bold**, `code`, and lists) into safe HTML/React
+const FormatMessageContent = memo(function FormatMessageContent({ text }: { text: string }) {
   const lines = text.split('\n')
   return (
     <div className="space-y-1.5 font-sans">
@@ -36,7 +36,7 @@ function FormatMessageContent({ text }: { text: string }) {
       })}
     </div>
   )
-}
+})
 
 function parseFormat(content: string) {
   // Simple regex parser for bold (**) and inline code (`)
