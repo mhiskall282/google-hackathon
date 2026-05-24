@@ -178,7 +178,9 @@ export function AgentChat() {
 
   // Setup onboarding greeting
   useEffect(() => {
-    if (messages.length === 0) {
+    // Prevent duplicate welcome messages in React Strict Mode
+    const currentMessages = useChatStore.getState().messages;
+    if (currentMessages.length === 0 && !currentMessages.some(m => m.id === 'welcome')) {
       addMessage({
         id: 'welcome',
         role: 'system',
@@ -186,7 +188,7 @@ export function AgentChat() {
         timestamp: 'SYSTEM'
       })
     }
-  }, [messages.length, addMessage])
+  }, [addMessage])
 
   const triggerChatResponse = (text: string) => {
     if (!text.trim() || isStreaming) return

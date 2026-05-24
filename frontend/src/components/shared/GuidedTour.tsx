@@ -162,62 +162,66 @@ export function GuidedTour() {
       {/* Tooltip Card */}
       <AnimatePresence mode="wait">
         {targetRect && (
-          <motion.div
-            key={currentStep.targetId}
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-            className="absolute z-[101] w-[320px] max-w-[calc(100vw-32px)] bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden"
+          <div 
+            className="absolute z-[101]"
             style={getTooltipPosition()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/80">
-              <div className="flex items-center gap-2">
-                <Flag className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-slate-200">
-                  {currentStep.title}
-                </h3>
-              </div>
-              <button 
-                onClick={handleSkip}
-                className="text-slate-500 hover:text-slate-300 transition-colors"
-                aria-label="Skip tour"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-4">
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {currentStep.description}
-              </p>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between p-4 border-t border-slate-800 bg-slate-900/50">
-              <div className="text-xs font-mono text-slate-500">
-                {currentStepIndex + 1} / {TOUR_STEPS.length}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrev}
-                  disabled={currentStepIndex === 0}
-                  className="p-1.5 rounded bg-slate-800 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
+            <motion.div
+              key={currentStep.targetId}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="w-[320px] max-w-[calc(100vw-32px)] bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/80">
+                <div className="flex items-center gap-2">
+                  <Flag className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-semibold text-slate-200">
+                    {currentStep.title}
+                  </h3>
+                </div>
+                <button 
+                  onClick={handleSkip}
+                  className="text-slate-500 hover:text-slate-300 transition-colors"
+                  aria-label="Skip tour"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={isLastStep ? handleEnd : handleNext}
-                  className="px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 font-medium text-sm transition-colors flex items-center gap-1"
-                >
-                  {isLastStep ? 'Finish' : 'Next'}
-                  {!isLastStep && <ChevronRight className="w-4 h-4" />}
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-            </div>
-          </motion.div>
+
+              {/* Body */}
+              <div className="p-4">
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  {currentStep.description}
+                </p>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between p-4 border-t border-slate-800 bg-slate-900/50">
+                <div className="text-xs font-mono text-slate-500">
+                  {currentStepIndex + 1} / {TOUR_STEPS.length}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentStepIndex === 0}
+                    className="p-1.5 rounded bg-slate-800 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={isLastStep ? handleEnd : handleNext}
+                    className="px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 font-medium text-sm transition-colors flex items-center gap-1"
+                  >
+                    {isLastStep ? 'Finish' : 'Next'}
+                    {!isLastStep && <ChevronRight className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>,
