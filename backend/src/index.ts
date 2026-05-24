@@ -341,6 +341,20 @@ async function executeListSupplyCaches() {
 }
 
 // REST Endpoints
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Beacon Tactical Telemetry Hub API',
+    status: 'ONLINE',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      alerts: '/api/alerts',
+      liveAlerts: '/api/alerts/live',
+      chat: '/api/chat (POST)'
+    }
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'HEALTHY', supabaseConnected: !!supabase, mongoConnected: !!mongoDb });
 });
