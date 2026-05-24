@@ -524,12 +524,12 @@ export function MapView() {
         </span>
         <div className="space-y-1.5">
           {(['shelters', 'alerts', 'roads', 'assets', 'weather'] as const).map((layerKey) => (
-            <label key={layerKey} className="flex items-center gap-2 text-[10px] font-mono text-slate-300 hover:text-slate-100 cursor-pointer">
+            <label key={layerKey} className="flex items-center gap-2 text-[10px] font-mono text-slate-300 hover:text-slate-100 cursor-pointer py-1.5">
               <input
                 type="checkbox"
                 checked={visibleLayers[layerKey]}
                 onChange={() => useMapStore.getState().toggleLayer(layerKey)}
-                className="accent-emergency-info h-3 w-3 bg-slate-900 border-slate-700 rounded focus:ring-0 focus:ring-offset-0"
+                className="accent-emergency-info h-4 w-4 bg-slate-900 border-slate-700 rounded focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
               <span className="capitalize">
                 {layerKey === 'weather' ? 'Weather Radar' : layerKey}

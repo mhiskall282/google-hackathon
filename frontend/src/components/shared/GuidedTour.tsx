@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, startTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Flag } from 'lucide-react'
 import { useTourStore, TOUR_STEPS } from '../../store/tourStore'
@@ -9,6 +9,11 @@ export function GuidedTour() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
   
   const currentStep = TOUR_STEPS[currentStepIndex]
+
+  const handleNext = () => startTransition(() => nextStep())
+  const handlePrev = () => startTransition(() => prevStep())
+  const handleSkip = () => startTransition(() => skipTour())
+  const handleEnd = () => startTransition(() => endTour())
 
   useEffect(() => {
     if (!isActive || !currentStep) return
@@ -46,22 +51,61 @@ export function GuidedTour() {
     if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
 
     const padding = 20
-    const position = currentStep.position || 'bottom'
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+    let position = currentStep.position || 'bottom'
+
+    // Override left/right to bottom on mobile to prevent clipping
+    if (isMobile && (position === 'left' || position === 'right')) {
+      position = 'bottom'
+    }
+
+    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1000
+    const tooltipWidth = Math.min(320, windowWidth - 32)
+    let top = 0
+    let left = 0
+    let transform = ''
 
     switch (position) {
       case 'bottom':
-        return { top: targetRect.bottom + padding, left: targetRect.left + targetRect.width / 2, transform: 'translateX(-50%)' }
+        top = targetRect.bottom + padding
+        left = targetRect.left + targetRect.width / 2
+        transform = 'translate(-50%, 0)'
+        break
       case 'top':
-        return { top: targetRect.top - padding, left: targetRect.left + targetRect.width / 2, transform: 'translate(-50%, -100%)' }
+        top = targetRect.top - padding
+        left = targetRect.left + targetRect.width / 2
+        transform = 'translate(-50%, -100%)'
+        break
       case 'left':
-        return { top: targetRect.top + targetRect.height / 2, left: targetRect.left - padding, transform: 'translate(-100%, -50%)' }
+        top = targetRect.top + targetRect.height / 2
+        left = targetRect.left - padding
+        transform = 'translate(-100%, -50%)'
+        break
       case 'right':
-        return { top: targetRect.top + targetRect.height / 2, left: targetRect.right + padding, transform: 'translateY(-50%)' }
+        top = targetRect.top + targetRect.height / 2
+        left = targetRect.right + padding
+        transform = 'translate(0, -50%)'
+        break
       case 'center':
-        return { top: targetRect.top + targetRect.height / 2, left: targetRect.left + targetRect.width / 2, transform: 'translate(-50%, -50%)' }
+        top = targetRect.top + targetRect.height / 2
+        left = targetRect.left + targetRect.width / 2
+        transform = 'translate(-50%, -50%)'
+        break
       default:
-        return { top: targetRect.bottom + padding, left: targetRect.left + targetRect.width / 2, transform: 'translateX(-50%)' }
+        top = targetRect.bottom + padding
+        left = targetRect.left + targetRect.width / 2
+        transform = 'translate(-50%, 0)'
+        break
     }
+
+    // Horizontal boundary clamping for center-aligned components (top/bottom/center)
+    if (transform.includes('-50%, 0') || transform.includes('-50%, -100%') || transform.includes('-50%, -50%')) {
+      const minLeft = (tooltipWidth / 2) + 16
+      const maxLeft = windowWidth - (tooltipWidth / 2) - 16
+      left = Math.max(minLeft, Math.min(left, maxLeft))
+    }
+
+    return { top, left, transform }
   }
 
   // Calculate coordinates for the "hole" in the overlay
@@ -121,7 +165,7 @@ export function GuidedTour() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="absolute z-[101] w-[320px] bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden"
+            className="absolute z-[101] w-[320px] max-w-[calc(100vw-32px)] bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden"
             style={getTooltipPosition()}
           >
             {/* Header */}
@@ -133,7 +177,7 @@ export function GuidedTour() {
                 </h3>
               </div>
               <button 
-                onClick={skipTour}
+                onClick={handleSkip}
                 className="text-slate-500 hover:text-slate-300 transition-colors"
                 aria-label="Skip tour"
               >
@@ -155,14 +199,14 @@ export function GuidedTour() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={prevStep}
+                  onClick={handlePrev}
                   disabled={currentStepIndex === 0}
                   className="p-1.5 rounded bg-slate-800 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={isLastStep ? endTour : nextStep}
+                  onClick={isLastStep ? handleEnd : handleNext}
                   className="px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 font-medium text-sm transition-colors flex items-center gap-1"
                 >
                   {isLastStep ? 'Finish' : 'Next'}
