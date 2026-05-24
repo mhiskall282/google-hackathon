@@ -10,6 +10,14 @@
   --color-terminal-glow-green: rgba(34, 197, 94, 0.15);
   --color-terminal-glow-cyan: rgba(6, 182, 212, 0.15);
   
+  --color-mongodb-green: #00ED64;
+  --color-mongodb-forest: #00684A;
+  --color-mongodb-dark: #001E2B;
+  --color-mongodb-slate: #003024;
+  --color-mongodb-card: #0b1a22;
+  --color-mongodb-border: rgba(0, 237, 100, 0.15);
+  --color-mongodb-text: #e8edea;
+  
   --color-emergency-critical: #ef4444;
   --color-emergency-warning: #f97316;
   --color-emergency-ok: #22c55e;
