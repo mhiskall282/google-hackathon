@@ -139,7 +139,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-y-auto bg-mongodb-dark text-mongodb-text font-sans scroll-smooth">
+    <div className="relative w-full h-screen overflow-x-hidden overflow-y-auto bg-mongodb-dark text-mongodb-text font-sans scroll-smooth">
       {/* Background radial highlights in MongoDB green and slate */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-mongodb-green/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-mongodb-slate/15 rounded-full blur-[160px] pointer-events-none" />
