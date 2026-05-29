@@ -40,7 +40,7 @@ export function Header({ onToggleAdmin, isAdminOpen }: HeaderProps) {
               V1.2
             </span>
           </div>
-          <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase leading-none block mt-1">
+          <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase leading-none hidden sm:block mt-1">
             Tactical Disaster Response Coordination
           </span>
         </div>

@@ -157,21 +157,21 @@ export function LandingPage({ onEnter }: LandingPageProps) {
             className="flex flex-col min-h-screen"
           >
             {/* Header Navigation */}
-            <header className="border-b border-slate-800/80 bg-mongodb-dark/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="font-display font-black text-xl tracking-wider text-white">
-                  🛰️ BEACON
+            <header className="border-b border-slate-800/80 bg-mongodb-dark/80 backdrop-blur-md sticky top-0 z-50 px-4 sm:px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="font-display font-black text-lg sm:text-xl tracking-wider text-white">
+                  BEACON
                 </span>
-                <span className="flex items-center gap-1.5 text-[8px] font-mono font-bold tracking-widest text-mongodb-green uppercase border border-mongodb-green/30 bg-mongodb-green/5 px-2 py-0.5 rounded">
+                <span className="flex items-center gap-1.5 text-[8px] font-mono font-bold tracking-widest text-mongodb-green uppercase border border-mongodb-green/30 bg-mongodb-green/5 px-2 py-0.5 rounded shrink-0">
                   <span className="h-1.5 w-1.5 rounded-full bg-mongodb-green animate-ping" />
                   Live Feed Connected
                 </span>
               </div>
-              <div className="flex items-center gap-6 text-xs font-mono">
+              <div className="flex items-center gap-3 sm:gap-6 text-xs font-mono">
                 <a 
                   href="#capabilities" 
                   onClick={(e) => { e.preventDefault(); scrollToCapabilities(); }}
-                  className="text-slate-400 hover:text-white transition-colors"
+                  className="hidden md:inline text-slate-400 hover:text-white transition-colors"
                 >
                   CAPABILITIES
                 </a>
@@ -181,13 +181,13 @@ export function LandingPage({ onEnter }: LandingPageProps) {
                     e.preventDefault();
                     document.getElementById('playground')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="text-slate-400 hover:text-white transition-colors"
+                  className="hidden md:inline text-slate-400 hover:text-white transition-colors"
                 >
                   PLAYGROUND
                 </a>
                 <button
                   onClick={handleBoot}
-                  className="bg-mongodb-green hover:bg-mongodb-green/90 text-mongodb-dark px-3 py-1.5 rounded font-bold text-xs tracking-wider transition-all"
+                  className="bg-mongodb-green hover:bg-mongodb-green/90 text-mongodb-dark px-3 py-1.5 rounded font-bold text-xs tracking-wider transition-all whitespace-nowrap cursor-pointer"
                 >
                   LAUNCH CONSOLE
                 </button>
@@ -196,12 +196,12 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
             {/* Hero Section */}
             <section className="px-6 py-20 md:py-28 max-w-5xl mx-auto text-center space-y-8 relative">
-              <div className="inline-flex items-center gap-2 border border-mongodb-green/30 bg-mongodb-slate/20 px-3.5 py-1.5 rounded-full text-xs font-mono text-mongodb-green animate-pulse mx-auto">
+              <div className="inline-flex items-center gap-2 border border-mongodb-green/30 bg-mongodb-slate/20 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-mono text-mongodb-green animate-pulse mx-auto">
                 <Activity className="h-3.5 w-3.5" />
                 <span>REAL-TIME DISASTER COORDINATION NETWORK</span>
               </div>
 
-              <h1 className="font-display font-black text-4xl sm:text-5xl md:text-7xl text-white leading-tight tracking-tight max-w-4xl mx-auto">
+              <h1 className="font-display font-black text-3xl sm:text-5xl md:text-7xl text-white leading-tight tracking-tight max-w-4xl mx-auto">
                 Unified Crisis Intelligence <br />
                 <span className="bg-gradient-to-r from-mongodb-green via-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                   For Emergency Logistics
@@ -408,7 +408,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
                             </div>
                           </div>
 
-                          <div className="flex justify-between items-center bg-mongodb-slate/10 border border-mongodb-green/20 p-3.5 rounded">
+                          <div className="flex flex-col sm:flex-row gap-3 justify-between sm:items-center bg-mongodb-slate/10 border border-mongodb-green/20 p-3.5 rounded">
                             <span className="text-slate-300">Reroute overflow via I-45 corridor:</span>
                             <button
                               type="button"
