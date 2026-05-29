@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Header } from '@/components/shared/Header'
 import { DashboardLayout } from '@/features/dashboard/DashboardLayout'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { AdminControls } from '@/features/admin/AdminControls'
 import { useWebSocket } from '@/hooks/useWebSocket'
-import { GuidedTour } from '@/components/shared/GuidedTour'
-import { useTourStore } from '@/store/tourStore'
 
 // Initialize TanStack Query client for API caching and polling
 const queryClient = new QueryClient({
@@ -25,18 +23,7 @@ function App() {
   // Activate WebSocket listener when dashboard view is active
   useWebSocket(currentView === 'dashboard')
 
-  const { hasCompletedTour, startTour } = useTourStore()
 
-  // Start the tour automatically on first visit to dashboard
-  useEffect(() => {
-    if (currentView === 'dashboard' && !hasCompletedTour) {
-      // Small delay to allow the dashboard layout to mount fully
-      const timer = setTimeout(() => {
-        startTour()
-      }, 800)
-      return () => clearTimeout(timer)
-    }
-  }, [currentView, hasCompletedTour, startTour])
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -61,8 +48,6 @@ function App() {
             onClose={() => setIsAdminOpen(false)} 
           />
 
-          {/* Interactive Guided Tour Overlay */}
-          <GuidedTour />
         </div>
       )}
     </QueryClientProvider>

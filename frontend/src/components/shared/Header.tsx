@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Volume2, VolumeX, ShieldAlert, Radio, Activity, Sliders, HelpCircle } from 'lucide-react'
+import { Volume2, VolumeX, ShieldAlert, Radio, Activity, Sliders } from 'lucide-react'
 import { useAlertStore } from '@/store/useAlertStore'
-import { useTourStore } from '@/store/tourStore'
 
 interface HeaderProps {
   onToggleAdmin: () => void;
@@ -10,7 +9,7 @@ interface HeaderProps {
 
 export function Header({ onToggleAdmin, isAdminOpen }: HeaderProps) {
   const { isAudioMuted, toggleAudioMute, alerts } = useAlertStore()
-  const startTour = useTourStore(state => state.startTour)
+
   const [time, setTime] = useState(new Date())
 
   // Dynamic ticking UTC clock
@@ -85,16 +84,6 @@ export function Header({ onToggleAdmin, isAdminOpen }: HeaderProps) {
         </div>
 
         <div className="w-[1px] h-6 bg-terminal-border hidden sm:block" />
-
-        {/* Tour / Help Toggle */}
-        <button
-          type="button"
-          onClick={startTour}
-          aria-label="Start interactive guided tour"
-          className="h-9 w-9 flex items-center justify-center rounded border border-terminal-border bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-200"
-        >
-          <HelpCircle className="h-4 w-4" />
-        </button>
 
         {/* Audio Alert Toggle */}
         <button
