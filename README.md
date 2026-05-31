@@ -10,32 +10,34 @@ The project is structured as a clean multi-service monorepo using `pnpm` workspa
 
 ```mermaid
 graph TD
-  A[Root Workspace] --> B[frontend/ - React + Vite App]
-  A --> C[backend/ - Express + WebSocket Server]
-  A --> D[shared/ - Common TypeScript Schemas]
-  A --> E[cloud-functions/ - Google Cloud Functions]
-  A --> F[infrastructure/ - Docker Compose & Supabase Migrations]
-  
-  subgraph shared
-    D --> D1[Alert, Shelter, RoadSegment, AssetCache, Message]
-  end
+    A["Root Workspace"]
 
-  subgraph frontend
-    B --> G[index.html - View Shell]
-    B --> H[src/ - Source Code]
-    H --> H1[store/ - Zustand Atomic States]
-    H --> H2[features/ - Landing Gate, SOP Manual, Google Satellite map]
-  end
+    A --> B["frontend/ - React + Vite App"]
+    A --> C["backend/ - Express + WebSocket Server"]
+    A --> D["shared/ - Common TypeScript Schemas"]
+    A --> E["cloud-functions/ - Google Cloud Functions"]
+    A --> F["infrastructure/ - Docker Compose & Supabase Migrations"]
 
-  subgraph backend
-    C --> I[src/index.ts - Express HTTP + WebSocket Server]
-    C --> J[@supabase/supabase-js - Database Sync Client]
-  end
+    subgraph Shared
+        D --> D1["Alert, Shelter, RoadSegment, AssetCache, Message"]
+    end
 
-  subgraph cloud-functions
-    E --> K[incoming-alert - Gemini Pro NLP Geocoder]
-    E --> L[shelter-check - Automated Overload Auditor]
-  end
+    subgraph Frontend
+        B --> G["index.html - View Shell"]
+        B --> H["src/ - Source Code"]
+        H --> H1["store/ - Zustand Atomic States"]
+        H --> H2["features/ - Landing Gate, SOP Manual, Google Satellite Map"]
+    end
+
+    subgraph Backend
+        C --> I["src/index.ts - Express HTTP and WebSocket Server"]
+        C --> J["supabase-js Database Sync Client"]
+    end
+
+    subgraph Cloud_Functions
+        E --> K["incoming-alert - Gemini Pro NLP Geocoder"]
+        E --> L["shelter-check - Automated Overload Auditor"]
+    end
 ```
 
 ---
